@@ -1,4 +1,8 @@
 {
+  "description": "NativeScript Application",
+  "license": "SEE LICENSE IN <your-license-filename>",
+  "readme": "NativeScript Application",
+  "repository": "<fill-your-repository-here>",
   "nativescript": {
     "id": "edu.gatech.ael.argon4",
     "tns-android": {
@@ -20,6 +24,7 @@
     "nativescript-vuforia": "file:plugins/nativescript-vuforia",
     "speigg-nativescript-geolocation": "0.0.9-patch.0",
     "tns-core-modules": "^2.5.2",
+    "tns-core-modules-widgets": "2.5.0",
     "urijs": "^1.17.1"
   },
   "devDependencies": {
@@ -31,6 +36,7 @@
     "lazy": "1.0.11",
     "nativescript-dev-typescript": "^0.3.1",
     "tns-platform-declarations": "^2.4.4",
-    "typescript": "^2.1.4"
+    "typescript": "^2.1.4",
+    "nativescript-dev-android-snapshot": "^0.*.*"
   }
 }

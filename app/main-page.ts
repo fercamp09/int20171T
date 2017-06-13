@@ -401,8 +401,8 @@ export function searchBarLoaded(args) {
 
     if (isFirstLoad) {
         searchBar.on(SearchBar.submitEvent, () => {
-            let urlString = searchBar.text;
-
+            //let urlString = searchBar.text;
+            let urlString = "~/plugins/userinterface/index.html";
             // if (!urlString) urlString = appViewModel.currentUri;
 
             if (urlString.includes(" ") || !urlString.includes(".")) {
@@ -413,11 +413,13 @@ export function searchBarLoaded(args) {
             if (urlString.indexOf('//') === -1) urlString = '//' + urlString;
             
             const url = URI(urlString);
-            if (url.protocol() !== "http" && url.protocol() !== "https") {
+            /*if (url.protocol() !== "http" && url.protocol() !== "https") {
                 url.protocol("https");
-            }
+            }*/
             setSearchBarText(url.toString());
-            appViewModel.loadUrl(url.toString());
+            //appViewModel.loadUrl("file:///data/data/edu.gatech.ael.argon4/files/app/components/userinterface/index.html");
+            appViewModel.loadUrl("~/components/userinterface/index.html");
+            //appViewModel.loadUrl(url.toString());
             appViewModel.hideBookmarks();
             appViewModel.hideRealityChooser();
             appViewModel.hideCancelButton();
