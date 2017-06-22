@@ -64,20 +64,20 @@ realityList.on('change', (data) => updateMap(data, realityMap));
 
 const builtinFavorites:Array<BookmarkItem> = [
     new BookmarkItem({
-        title: 'Argon Help',
-        uri: 'http://app.argonjs.io/'
+        title: 'Aplicación de Realidad Aumentada Online',
+        uri: 'http://200.126.23.63:1337/userinterface/index.html'
     }),
     new BookmarkItem({
-        title: 'Argon Samples',
-        uri: 'https://samples.argonjs.io/'
+        title: 'Aplicación de Realidad Aumentada Local',
+        uri: '~/components/userinterface/index.html'
     }),
     new BookmarkItem({
-        title: 'Argon-AFrame Samples',
-        uri: 'https://aframe.argonjs.io/'
+        title: 'Ejemplo de Vuforia',
+        uri: 'http://200.126.23.63:1337/vuforia/index.html'
     }),
     new BookmarkItem({
-        title: 'Credits',
-        uri: 'http://www.argonjs.io/#support'
+        title: 'Ejemplo de Vuforia Online',
+        uri: 'https://samples.argonjs.io/vuforia/index.html'
     })
 ]
 

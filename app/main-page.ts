@@ -42,7 +42,6 @@ appViewModel.on('propertyChange', (evt:PropertyChangeData)=>{
         setSearchBarText(appViewModel.currentUri || '');
         if (!appViewModel.currentUri) appViewModel.showBookmarks();
         appViewModel.updatePermissionsFromStorage(appViewModel.currentUri);
-        appViewModel.set('permissionChangesMade', false);
     }
     else if (evt.propertyName === 'viewerEnabled') {
         // const vuforiaDelegate = appViewModel.manager.container.get(Argon.VuforiaServiceDelegate);
@@ -264,11 +263,6 @@ appViewModel.on('propertyChange', (evt:PropertyChangeData)=>{
             touchOverlayView.off(GestureTypes.touch);
             touchOverlayView.visibility = 'collapse';
         }
-    } else if (evt.propertyName === "needReloadForPermissionChange") {
-        if (evt.value) {
-            appViewModel.set('needReloadForPermissionChange', false);
-            onReload(null);
-        }
     }
 })
 
@@ -402,8 +396,11 @@ export function searchBarLoaded(args) {
     if (isFirstLoad) {
         searchBar.on(SearchBar.submitEvent, () => {
             //let urlString = searchBar.text;
-            let urlString = "~/plugins/userinterface/index.html";
-            // if (!urlString) urlString = appViewModel.currentUri;
+            //let urlString = "~/components/userinterface/index.html";
+            let urlString = "http://200.126.23.63:1337/vuforia/index.html";
+
+            // Allows page reload by clicking submit on the url bar
+            if (urlString == "") urlString = appViewModel.currentUri || "";
 
             if (urlString.includes(" ") || !urlString.includes(".")) {
                 // queries with spaces or single words without dots go to google search
@@ -417,8 +414,8 @@ export function searchBarLoaded(args) {
                 url.protocol("https");
             }*/
             setSearchBarText(url.toString());
-            //appViewModel.loadUrl("file:///data/data/edu.gatech.ael.argon4/files/app/components/userinterface/index.html");
-            appViewModel.loadUrl("~/components/userinterface/index.html");
+            //appViewModel.loadUrl("~/components/userinterface/index.html");
+            //appViewModel.loadUrl("http://200.126.23.63:1337/vuforia/index.html");
             //appViewModel.loadUrl(url.toString());
             appViewModel.hideBookmarks();
             appViewModel.hideRealityChooser();
@@ -458,8 +455,11 @@ export function browserViewLoaded(args) {
     if (isFirstLoad) {
         appViewModel.on(AppViewModel.loadUrlEvent, (data:LoadUrlEventData)=>{
             const url = data.url;
-
-            if (!data.newLayer || 
+            //const url = "~/components/userinterface/index.html";
+            //const url = "http://200.126.23.63:1337/vuforia/index.html";
+            //const url = "https://samples.argonjs.io/index.html";
+ 
+            if (!data.newLayer ||  
                 (browserView.focussedLayer &&
                 browserView.focussedLayer !== browserView.realityLayer &&
                 !browserView.focussedLayer.details.uri)) {
@@ -542,7 +542,6 @@ export function onAddChannel(args) {
 }
 
 export function onReload(args) {
-    appViewModel.set('permissionChangesMade', false);
     appViewModel.hideMenu();
     browserView.focussedLayer && 
         browserView.focussedLayer.webView && 
