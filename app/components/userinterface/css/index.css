@@ -210,13 +210,62 @@ body {
     margin: 0;
     padding: 0;
     background-color: rgba(20,20,20,0.5);
-    -webkit-backdrop-filter: blur(30px);
+
+    /*-webkit-backdrop-filter: blur(30px);*/
+
     /*background-color: #969696;*/
     -webkit-user-select: none;
     user-select: none;
 
-    -webkit-transform: translateZ(1px);
+    -webkit-transform: translateZ(2px);
+    z-index: 10;
 }
+
+@keyframes blurVisible {
+    0% {
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+    100% {
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+    }
+}
+
+@keyframes blurInvisible {
+    0% {
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+    }
+    100% {
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+}
+
+.craftingBoardBlur {
+
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+
+    animation-name: blurVisible;
+    animation-duration: 100ms;
+    -webkit-animation-fill-mode: forwards; /* Chrome, Safari, Opera */
+    -webkit-animation-timing-function: ease-out;
+
+}
+
+.craftingBoardClear {
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+
+    animation-name: blurInvisible;
+    animation-duration: 100ms;
+    -webkit-animation-fill-mode: forwards;
+    -webkit-animation-timing-function: ease-out;
+}
+
+
 
 .Interfaces {
     -webkit-transform-style: preserve-3d;
@@ -481,6 +530,7 @@ body {
     width: 60px;
     height: 320px;
     visibility: hidden;
+    pointer-events:none;
 }
 
 #bigPocketButtonDiv {
@@ -508,9 +558,6 @@ body {
 }
 
 .memoryBar {
-    position: fixed;
-    width: 100%;
-    text-align: center;
     margin: 0;
     padding: 0;
     z-index: 5;
@@ -523,33 +570,47 @@ body {
 }
 */
 
-.memoryContainer, #overlay.overlayMemoryInstant {
+.memoryContainer, #overlay.overlayMemory, .memory, .element-template {
     display: inline-block;
     margin: 0;
     padding: 0;
-    border: 2px solid #01FFFC;
-    width: 56px;
-    height: 56px;
-    border-radius: 8px;
+    box-sizing: border-box;
+    border: 3px solid #00FFFF;
+    width: calc(20vw - 18px);
+    height: calc(20vw - 18px);
     overflow: hidden;
 }
 
-.memoryContainer {
-    margin: 2.5px;
+#overlay.overlayMemory {
+    background-position: center center;
+    background-size: cover;
 }
 
-.memoryContainer.memoryDragging {
-    z-index: 4;
-    position: fixed;
-    top: 0;
-    left: 0;
+.element-template {
+    border-color: white;
+    margin: 3px;
+    overflow: hidden;
 }
 
-#overlay.overlayMemoryInstant, .memoryContainer.memoryPointer,
-.memoryWeb > .memoryContainer {
+.memoryContainer.memoryPointer {
+    box-sizing: border-box;
+    border: 3px solid #00FFFF;
+    width: 120px;
+    height: 120px;
     position: absolute;
-    margin-left: -30px;
-    margin-top: -30px;
+    margin-left: -60px;
+    margin-top: -60px;
+}
+
+.memoryContainer {
+    margin: 3px;
+}
+
+#overlay.overlayMemory, .memoryWeb > .memoryContainer {
+    border-radius: 0;
+    position: absolute;
+    margin-left: calc(-0.5 * (20vw - 18px));
+    margin-top: calc(-0.5 * (20vw - 18px));
 }
 
 .memoryDragContainer {
@@ -576,15 +637,23 @@ body {
     display: block;
     margin: 0;
     padding: 0;
-    width: 100px;
-    height: 56px;
-    margin-left: calc(56px/2 - 100px/2);
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+
+    object-fit: cover;
+    object-position: center;
+}
+
+.memoryContainer > .memory {
+    border: none;
+    border-radius: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 #overlay {
-    visibility: hidden;
+    display: none;
     pointer-events: none;
     position: fixed;
 
@@ -599,16 +668,11 @@ body {
 
     border: 4px solid #01fffc;
     border-radius: 60px;
-    transition: width 0.3s linear, height 0.3s linear, border-radius 0.3s linear, border-width 0.3s linear;
 
     /* this is a hack for adding the interface in front of the transformed web interface */
     z-index: 3;
     -webkit-transform-style: preserve-3d;
     -webkit-transform: translateZ(6px);
-}
-
-#overlay.overlayMemoryInstant {
-    transition: width 0.01s linear, height 0.01s linear, border-radius 0.01s linear, border-width 0.01s linear;
 }
 
 #overlay.overlayPositive,
@@ -739,6 +803,43 @@ Logic Interface CSS
     width: 100%;
 }
 
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity:1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.visibleFadeIn {
+    opacity: 1;
+
+    animation-name: fadeIn;
+    animation-duration: 100ms;
+    -webkit-animation-fill-mode: forwards; /* Chrome, Safari, Opera */
+    -webkit-animation-timing-function: ease-out;
+}
+
+.invisibleFadeOut {
+    opacity:1;
+
+    animation-name: fadeOut;
+    animation-duration: 100ms;
+    -webkit-animation-fill-mode: forwards;
+    -webkit-animation-timing-function: ease-out;
+}
+
 .blockPlaceholder {
     width: 92px;
     height:100%;
@@ -798,6 +899,7 @@ Logic Interface CSS
 }
 
 .blockDivPlaced {
+    box-sizing: border-box;
   position: absolute;
   color: white;
   user-select:none;
@@ -863,6 +965,7 @@ Logic Interface CSS
 }
 
 .menuBlock {
+    box-sizing: border-box;
   width: 92px;
   height: 46px;
   display: inline-block;
@@ -889,8 +992,9 @@ Logic Interface CSS
 
 .blockIcon {
   text-align: center;
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+   /* height: 100%;*/
+    overflow: hidden;
   /*height: 20px;*/
   /*width: 75%;*/
 /*  display:-webkit-box;
@@ -898,13 +1002,15 @@ Logic Interface CSS
   -webkit-box-align:center;*/
   user-select:none;
   -webkit-user-select:none;
-  -webkit-filter: invert(100%); /*TODO: temporary fix until icon colors are preset to white*/
+}
+
+.blockBox {
+    display: inline-block;
 }
 
 .blockTitle {
   /*display: inline-block;*/
   text-align: center;
-  /* height: 10px; */
 }
 
 .blockMoveDiv {
@@ -1008,3 +1114,15 @@ Logic Interface CSS
 .pocket.pocketShown {
     display: block;
 }
+
+.palette {
+    width: calc(100% - 10vw);
+    padding-top: 16px;
+}
+
+.palette-element {
+    border: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+}
+

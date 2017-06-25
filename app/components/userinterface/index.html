@@ -53,7 +53,7 @@
     <meta http-equiv="expires" content="0"/>
     <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"/>
     <meta http-equiv="pragma" content="no-cache"/>
-    <meta http-equiv="origin-trial" data-feature="WebVR" data-expires="2017-06-06" content="ArfXzMSluPfAfoVDD+ne9oWykUyDeLFD/z4/0uRCdZ1491aSrytWyj7gnGhwK1/Tzg/D+UOvNgD2+L9PWqF5XwwAAABceyJvcmlnaW4iOiJodHRwczovL2FyZ29uanMuaW86NDQzIiwiZmVhdHVyZSI6IldlYlZSIiwiZXhwaXJ5IjoxNDk2NzcxODA0LCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
+     <meta http-equiv="origin-trial" data-feature="WebVR" data-expires="2017-06-06" content="ArfXzMSluPfAfoVDD+ne9oWykUyDeLFD/z4/0uRCdZ1491aSrytWyj7gnGhwK1/Tzg/D+UOvNgD2+L9PWqF5XwwAAABceyJvcmlnaW4iOiJodHRwczovL2FyZ29uanMuaW86NDQzIiwiZmVhdHVyZSI6IldlYlZSIiwiZXhwaXJ5IjoxNDk2NzcxODA0LCJpc1N1YmRvbWFpbiI6dHJ1ZX0=">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>Hybrid Objects - Editor</title>
 
@@ -71,21 +71,45 @@
 
     <script src="thirdPartyCode/switchery.js"></script>
     <script src="thirdPartyCode/pep.min.js"></script>
-    <script src="js/constructors.js"></script>
-    <script src="js/globalVariables.js"></script>
-    <script src="js/advertisedConnections.js"></script>
-    <script src="js/utilities.js"></script>
-    <script src="js/index.js"></script>
-    <script src="js/gui.js"></script>
-    <script src="js/memory.js"></script>
-    <script src="js/memory-pointers.js"></script>
-    <script src="js/pocket.js"></script>
-    <script src="js/eventHandlers.js"></script>
-    <script src="js/interactWithLines.js"></script>
-    <script src="js/onload.js"></script>
-    <script src="js/datacraftingGrid.js"></script>
-    <script src="js/datacraftingEventHandlers.js"></script>
-    <script src="js/datacraftingEventHelpers.js"></script>
+    <script src="thirdPartyCode/d3.min.js"></script>
+
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+
+    <script src="src/constructors.js"></script>
+    <script src="src/index.js"></script>
+    <script src="src/objects.js"></script>
+    <script src="src/states.js"></script>
+
+    <script src="src/device/index.js"></script>
+    <script src="src/device/utilities.js"></script>
+    <script src="src/device/onLoad.js"></script>
+
+    <script src="src/network/index.js"></script>
+    <script src="src/network/utilities.js"></script>
+
+    <script src="src/gui/index.js"></script>
+    <script src="src/gui/utilities.js"></script>
+    <script src="src/gui/buttons.js"></script>
+    <script src="src/gui/instantConnection.js"></script>
+    <script src="src/gui/pocket.js"></script>
+    <script src="src/gui/preferences.js"></script>
+    <script src="src/gui/frame.js"></script>
+
+    <script src="src/gui/ar/index.js"></script>
+    <script src="src/gui/ar/utilities.js"></script>
+    <script src="src/gui/ar/draw.js"></script>
+    <script src="src/gui/ar/lines.js"></script>
+    <script src="src/gui/ar/positioning.js"></script>
+
+    <script src="src/gui/crafting/index.js"></script>
+    <script src="src/gui/crafting/utilities.js"></script>
+    <script src="src/gui/crafting/blockMenu.js"></script>
+    <script src="src/gui/crafting/eventHandlers.js"></script>
+    <script src="src/gui/crafting/eventHelper.js"></script>
+    <script src="src/gui/crafting/grid.js"></script>
+
+    <script src="src/gui/memory/index.js"></script>
+    <script src="src/gui/memory/pointer.js"></script>
 
 </head>
 <body touch-action="none">
@@ -96,8 +120,8 @@
 </div>
 
 <!-- This is the console terminal -->
-<!-- This is the console terminal -->
-<div class='Interfaces' id="craftingBoard"></div>
+
+<div class='Interfaces craftingBoardBlur' id="craftingBoard"></div>
 
 
 <div class='Interfaces' id="advertisedConnections" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; display: none;  -webkit-transform: translateZ(1px);">
@@ -145,7 +169,8 @@
 
         <div id="content20" class='Interfaces PrefTitle'>
             <input id="newURLText"
-                   type="url" name="newURL"  size="15" placeholder="http://..." value="http://" oninput='newURLTextLoad()'><br>
+                   type="url" name="newURL"  size="15" placeholder="http://..." value="http://"
+                   oninput="realityEditor.device.utilities.newURLTextLoad()"><br>
         </div>
 
         <div id="content30" class='Interfaces PrefTitle'>
@@ -265,11 +290,14 @@
 <div class="pocket">
     <div class='memoryBar'>
     </div>
+    <div class="palette">
+    </div>
 </div>
 
-<canvas class="Canvas" id="canvas" touch-action="none"></canvas>
+<!-- <canvas class="Canvas" id="canvas" touch-action="none"></canvas> -->
 
 <div class='Interfaces' id="overlay"></div>
+<canvas id="canvasX" width="1280px" height="670px"></canvas>
 
 
 <!--<iframe src="setting/index.html" frameborder="0" style="position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; height: 100%; width: 100%; -webkit-transform: translateZ(0px);" ></iframe>
