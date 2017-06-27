@@ -4,6 +4,5 @@
 /hooks
 /lib
 .DS_Store
-/app/**/*.js
 /plugins/**/*.js
 *.js.map
