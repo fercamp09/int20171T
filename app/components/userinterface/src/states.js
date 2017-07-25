@@ -54,7 +54,6 @@
 var ec = 0;
 var disp = {};
 var uiButtons;
-var guiButtonImage;
 var httpPort = 8080;
 var timeForContentLoaded = 600; // temporary set to 1000x with the UI Recording mode for video recording
 var timeCorrection = {delta: 0, now: 0, then: 0};
@@ -64,6 +63,7 @@ var timeCorrection = {delta: 0, now: 0, then: 0};
  **********************************************************************************************************************/
 
 var globalStates = {
+	moveDelay : 1000,
 	tempUuid : "0000",
 	debug: false,
 	overlay: 0,
@@ -72,21 +72,26 @@ var globalStates = {
 	ballDistance: 14,
 	ballSize: 6,
 	ballAnimationCount: 0,
-
-	width: window.screen.width,
-	height: window.screen.height,
+    
+    width: window.innerHeight,
+    height: window.innerWidth,
 	guiState: "ui",
 	UIOffMode: false,
-	preferencesButtonState: false,
+	settingsButtonState: false,
 	extendedTracking: false,
 	currentLogic: null,
 
 	extendedTrackingState: false,
 	developerState: false,
 	clearSkyState: false,
+    realityState: false,
 	externalState: "",
 	sendMatrix3d: false,
 	sendAcl: false,
+    
+    lockingMode: false,
+    //authenticatedUser: null,
+    lockPassword: null,
 
 	pocketButtonState: false,
 	pocketButtonDown: false,
@@ -134,7 +139,11 @@ var globalStates = {
 	thisAndthat : {
 		interval: undefined,
 		timeout: undefined
-	}
+	},
+
+	// rettail
+	reality: false,
+	interface: "gui"
 };
 
 var globalCanvas = {};
@@ -231,7 +240,19 @@ var columnHighlightColorMap = ["rgba(0,255,255,0.15)", "rgba(0,255,0,0.15)", "rg
 //var activeBlockColor = "#E6E6E6"; // added blocks are grey
 //var movingBlockColor = "#FFFFFF"; // blocks turn white when you start to drag them
 
-var DEBUG_DATACRAFTING = false; // when TRUE -> shows crafting board just by tapping on first menu item (DEBUG mode)
+var DEBUG_DATACRAFTING = true; // when TRUE -> shows crafting board just by tapping on first menu item (DEBUG mode)
 
 var blockIconCache = {};
 
+var globalConnect = {
+	startPoint: [0,0],
+	endPoint: [0,0],
+    objectA: null,
+	nodeA: null,
+	objectB: null,
+	nodeB: null,
+}
+
+ var globalDelete = {
+	 startPoint: [0,0]
+ };
