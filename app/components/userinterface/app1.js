@@ -41,7 +41,7 @@ function click(e){
 		globalConnect.endPoint[0] = rect.left + rect.width/2;
 		// Draw the connection
 		// drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
-		makeConnection(globalConnect.objectA, globalConnect.objectB, globalConnect.nodeA,globalConnect.nodeB );
+		makeConnectionOnServer(globalConnect.objectA, globalConnect.objectB, globalConnect.nodeA,globalConnect.nodeB );
 		reset();
 	}
 }
@@ -54,8 +54,8 @@ function reset (){
 	// Send a message to the frame's window
 	var msg = { uiActionFeedback: 1};
 	frameWindow.postMessage(msg, '*');
-		
-    globalConnect.nodeA = "";
+	       	
+    globalConnect.  nodeA = "";
     globalConnect.nodeB = "";    
     globalConnect.click = false;
     globalConnect.connected = false;
@@ -136,7 +136,7 @@ function touchEnd (e) {
     // drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
     
     // Make the connection
-    makeConnection(globalConnect.objectA, globalConnect.objectB, globalConnect.nodeA,globalConnect.nodeB );
+    makeConnectionOnServer(globalConnect.objectA, globalConnect.objectB, globalConnect.nodeA,globalConnect.nodeB );
     reset();
 }
 
@@ -250,13 +250,15 @@ function deleteLines(x21, y21, x22, y22) {
                     delete thisObject.links[subKeysome];
                     //todo this is a work around to not crash the server. only temporarly for testing
                     // if(l.logicA === false && l.logicB === false)
-                    deleteLinkFromObject(thisObject.ip, keysome, subKeysome);
+                    //deleteLinkFromObject(thisObject.ip, keysome, subKeysome);
+                    sendDeleteLinkOO(l.nodeA , l.nodeB);
                     //realityEditor.network.deleteLinkFromObject(thisObject.ip, keysome, subKeysome);                    
                 //}
             }
         }
     }
 }
+
 // Draw a dotted line from a start point to a finish point on a canvas 
 function drawDotLine(context, lineStartPoint, lineEndPoint, b1, b2) {
 	context.beginPath();
@@ -279,24 +281,92 @@ function makeConnection(objectA, objectB, nodeA, nodeB){
     object.links[linkID].objectB = objectB; //object2.name; //object2.code
     object.links[linkID].nodeA = nodeA; //"node0"; 
     object.links[linkID].nodeB = nodeB; //"node1"; 
-
-    // Send http request that a new connection has been created between objects
-
 }
 
+// Creates a link between objects in the server
+function sendCreateLinkOO(nodeA , nodeB) {
+    $.ajax({
+        // la URL para la petición
+        url : 'http://200.126.23.138:1880/LINK/OO',
+     
+        // The information to send as parameters
+        data : { 
+                 code1: nodeA, 
+                 code2: nodeB
+               },
+        // POST or GET or some http method
+        type : 'GET',
+        // Information return type
+        dataType : 'jsonp',
+        // Information send type
+        contentType: 'text/plain',
+        xhrFields: {
+            // The 'xhrFields' property sets additional fields on the XMLHttpRequest.
+            // This can be used to set the 'withCredentials' property.
+            // Set the value to 'true' if you'd like to pass cookies to the server.
+            // If this is enabled, your server must respond with the header
+            // 'Access-Control-Allow-Credentials: true'.
+            withCredentials: true
+        },
+        // When the request is successful 
+        success : function(json){console.log(json);},
+        // When the request fails 
+        // status code: status
+        // xhr: raw petition
+        error : function(xhr, status) {
+            console.log('Disculpe, existió un problema');
+        },
+        // Executes no matter what, when the petition has been executed
+        complete : function(xhr, status) {
+           console.log('Petición realizada');
+        }
+    });
+}
+
+// Deletes a link between objects in the server
+function sendDeleteLinkOO(nodeA , nodeB){
+    $.ajax({
+        // la URL para la petición
+        url : 'http://200.126.23.138:1880/LINK/DELETE',
+     
+        // The information to send as parameters
+        data : { code1: nodeA, code2: nodeB},
+        // POST or GET or some http method
+        type : 'GET',
+        // Information return type
+        dataType : 'jsonp',
+        // Information send type
+        contentType: 'text/plain',
+        xhrFields: {
+            // The 'xhrFields' property sets additional fields on the XMLHttpRequest.
+            // This can be used to set the 'withCredentials' property.
+            // Set the value to 'true' if you'd like to pass cookies to the server.
+            // If this is enabled, your server must respond with the header
+            // 'Access-Control-Allow-Credentials: true'.
+            withCredentials: true
+        },
+        // When the request is successful 
+        success : function(json){console.log(json);},
+        // When the request fails 
+        // status code: status
+        // xhr: raw petition
+        error : function(xhr, status) {
+            console.log('Disculpe, existió un problema');
+        },
+        // Executes no matter what, when the petition has been executed
+        complete : function(xhr, status) {
+           console.log('Petición realizada');
+        }
+    });
+}
+
+// Creates a link between objects (circular nodes) in the app and the server
 // All parameters are strings for identifying them
-function generateLinks(devKey,objectA, objectB, nodeA, nodeB){
-    // New connection between nodes
-    var object = objects[devKey];
-    var linkID = objectA + nodeA + nodeB;
-    object.links[linkID] = new Link();
-    object.links[linkID].objectA = objectA; //object1.name; //object1.code
-    object.links[linkID].objectB = objectB; //object2.name; //object2.code
-    object.links[linkID].nodeA = nodeA; //"node0"; 
-    object.links[linkID].nodeB = nodeB; //"node1"; 
-
-    // Send http request that a new connection has been created between objects
-
+function makeConnectionOnServer(objectA, objectB, nodeA, nodeB){
+    // New connection between nodes in the app
+    makeConnection(objectA, objectB, nodeA, nodeB);
+    // New connection between nodes in the server
+    sendCreateLinkOO(nodeA , nodeB);
 }
 
 
@@ -367,8 +437,9 @@ function createNodes(id, x1, y1, x2, y2){
     nodes["node1"].y = y2;
     return nodes;
 }
+
+// Transform the datatypes from the json received from the server to the objects representation in the app
 function mapObjects(json){
-    console.log(json);
     for (var i in json){
         var dev = json[i];
         /////// Device //////
@@ -409,21 +480,19 @@ function mapObjects(json){
                     // Create interface for action
                     object1.interfaces[key] = generateUI(action.src +'/index.html', action.x, action.y);
                 }
-            }    
+            }
         }
-    }    
+    }
     
     for (var i in json){
         var dev = json[i];
-        console.log(dev.links);
         /////// Links //////    
         for (var key in dev.links){
-            console.log(key);
             var objectA = dev.links[key].objectA;
             var objectB = dev.links[key].objectB;
             var nodeA = dev.links[key].nodeA; 
             var nodeB = dev.links[key].nodeB;
-                     //generateLinks(dev.code, objectA, objectB, nodeA, nodeB); 
+            makeConnection(objectA, objectB, nodeA, nodeB);
         }
     }    
 }
@@ -496,73 +565,72 @@ function loadObject(id){
 //////////////////////////// Vuforia ////////////////////////////
 
 // Load vuforia dataset given an api, datasetPath(string), object(Object)
-function loadDataset(api, datasetPath, trackable){
-                        api.objectTracker.createDataSet(datasetPath).then(function (dataSet) {
-                            //api.objectTracker.createDataSet("https://200.126.23.63:1337/resources/datasets/ArgonTutorial.xml").then(function (dataSet) {
-                            // the data set has been succesfully downloaded
-                            // tell vuforia to load the dataset.  
-                            description.innerHTML = description.innerHTML + "=" + object.name;
-                            dataSet.load().then(function () {
-                                // when it is loaded, we retrieve a list of trackables defined in the
-                                // dataset and set up the content for the target
-                                var trackables = dataSet.getTrackables();
-                                // tell argon we want to track a specific trackable.  Each trackable
-                                // has a Cesium entity associated with it, and is expressed in a 
-                                // coordinate frame relative to the camera.  Because they are Cesium
-                                // entities, we can ask for their pose in any coordinate frame we know
-                                // about. 
-                                //var gvuBrochureEntity = app.context.subscribeToEntityById(trackables["GVUBrochure"].id);
-                                var targetEntity = app.context.subscribeToEntityById(trackables[trackable].id);
-                                // create a THREE object to put on the trackable
-                                var object3D = new THREE.Object3D;
-                                scene.add(object3D);
-                                // the updateEvent is called each time the 3D world should be
-                                // rendered, before the renderEvent.  The state of your application
-                                // should be updated here.
-                                description.innerHTML = description.innerHTML+ "-"+object.name + "added";
-                            
-                                app.context.updateEvent.addEventListener(function () {
-                                    // get the pose (in local coordinates) of the gvuBrochure target
-                                    var targetPose = app.context.getEntityPose(targetEntity);
-                                    // if the pose is known the target is visible, so set the
-                                    // THREE object to the location and orientation
-                                    if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
-                                        object3D.position.copy(targetPose.position);
-                                        object3D.quaternion.copy(targetPose.orientation);
-                                    }
-                                    // when the target is first seen after not being seen, the 
-                                    // status is FOUND.  Here, we move the 3D text object from the
-                                    // world to the target .
-                                    // when the target is first lost after being seen, the status 
-                                    // is LOST.  Here, we move the 3D text object back to the world       
-                                    // Go through the objects nodes to be added to the target 
-                                    for (var key in object.frames){
-                                        var node = object.frames[key];  
-                                        if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
-                                            object3D.add(node);
-                                            node.position.z = -0.1; // 0
-                                        }
-                                        else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
-                                            node.position.z = -0.50;//-0.50;
-                                            userLocation.add(node);
-                                        }
-                                    }
-                                });
-                                })["catch"](function (err) {
-                                console.log("could not load dataset: " + err.message);
-                            });
-                            // activate the dataset.
-                            api.objectTracker.activateDataSet(dataSet);
-                            description.innerHTML = description.innerHTML+ "-"+ object.name + "dataset activated";
-                            api.setHint(Argon.VuforiaHint.MaxSimultaneousImageTargets, 2).then(function (result) {
-                                console.log("setHint " + (result ? "succeeded" : "failed"));
-                                description.innerHTML = description.innerHTML+ "-" + "hintset";
-                            })["catch"](function (err) {
-                                console.log("could not set hint: " + err.message);
-                                description.innerHTML = description.innerHTML+ "-" + "could not  set hint";
-                            });
-                            
-});
+function loadDataset(api, datasetPath, trackable, object){
+    api.objectTracker.createDataSet(datasetPath).then(function (dataSet) {
+        //api.objectTracker.createDataSet("https://200.126.23.63:1337/resources/datasets/ArgonTutorial.xml").then(function (dataSet) {
+        // the data set has been succesfully downloaded
+        // tell vuforia to load the dataset.  
+        dataSet.load().then(function () {
+            // when it is loaded, we retrieve a list of trackables defined in the
+            // dataset and set up the content for the target
+            var trackables = dataSet.getTrackables();
+            // tell argon we want to track a specific trackable.  Each trackable
+            // has a Cesium entity associated with it, and is expressed in a 
+            // coordinate frame relative to the camera.  Because they are Cesium
+            // entities, we can ask for their pose in any coordinate frame we know
+            // about. 
+            //var gvuBrochureEntity = app.context.subscribeToEntityById(trackables["GVUBrochure"].id);
+            var targetEntity = app.context.subscribeToEntityById(trackables[trackable].id);
+            // create a THREE object to put on the trackable
+            var object3D = new THREE.Object3D;
+            scene.add(object3D);
+            // the updateEvent is called each time the 3D world should be
+            // rendered, before the renderEvent.  The state of your application
+            // should be updated here.
+            description.innerHTML = description.innerHTML + "-added";
+        
+            app.context.updateEvent.addEventListener(function () {
+                // get the pose (in local coordinates) of the gvuBrochure target
+                var targetPose = app.context.getEntityPose(targetEntity);
+                // if the pose is known the target is visible, so set the
+                // THREE object to the location and orientation
+                if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
+                    object3D.position.copy(targetPose.position);
+                    object3D.quaternion.copy(targetPose.orientation);
+                }
+                // when the target is first seen after not being seen, the 
+                // status is FOUND.  Here, we move the 3D text object from the
+                // world to the target .
+                // when the target is first lost after being seen, the status 
+                // is LOST.  Here, we move the 3D text object back to the world       
+                // Go through the objects nodes to be added to the target 
+                for (var key in object.frames){
+                    var node = object.frames[key];  
+                    if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
+                        object3D.add(node);
+                        node.position.z = -0.1; // 0
+                    }
+                    else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
+                        node.position.z = -0.50;//-0.50;
+                        userLocation.add(node);
+                    }
+                }
+            });
+            })["catch"](function (err) {
+            console.log("could not load dataset: " + err.message);
+        });
+        // activate the dataset.
+        api.objectTracker.activateDataSet(dataSet);
+        description.innerHTML = description.innerHTML+ "-dataset activated";
+        api.setHint(Argon.VuforiaHint.MaxSimultaneousImageTargets, 2).then(function (result) {
+            console.log("setHint " + (result ? "succeeded" : "failed"));
+            description.innerHTML = description.innerHTML+ "-" + "hintset";
+        })["catch"](function (err) {
+            console.log("could not set hint: " + err.message);
+            description.innerHTML = description.innerHTML+ "-" + "could not  set hint";
+        });
+        
+    });
 }
 
 // Activate vuforia targets, go through all objects searching for its targets
@@ -580,22 +648,23 @@ function activateTargets(){
             // the vuforia API is ready, so we can start using it.
             // tell argon to download a vuforia dataset.  The .xml and .dat file must be together
             // in the web directory, even though we just provide the .xml file url here 
-                    //var objectName = object.name;  
-                    //var datasetPath = "../resources/datasets/ArgonTutorial.xml";// + object.name + ".xml";
-                    for (var key in objects) {
-                        var object = objects[key];
-                        //var datasetPath = "../resources/datasets/"  + object.name + ".xml";
-                        description.innerHTML = description.innerHTML + "=" + key;
-                        loadDataset(api, "../resources/datasets/" + object.target +  ".xml", object.trackable);
-                         /*return new Promise(function(){
-                            });*/
-                            // enable 2 simultaneously tracked targets
-                            /*api.setHint(Argon.VuforiaHint.MaxSimultaneousImageTargets, 2).then(function (result) {
-                                console.log("setHint " + (result ? "succeeded" : "failed"));
-                            })["catch"](function (err) {
-                                console.log("could not set hint: " + err.message);
-                        });*/ 
-                    }
+            //var objectName = object.name;  
+            //var datasetPath = "../resources/datasets/ArgonTutorial.xml";// + object.name + ".xml";
+            for (var key in objects) {
+                var object = objects[key];
+                //var datasetPath = "../resources/datasets/"  + object.name + ".xml";
+                description.innerHTML = description.innerHTML + "=" + key;
+                description.innerHTML = description.innerHTML + "=" + object.target;
+                loadDataset(api, "../resources/datasets/" + object.target +  ".xml", object.trackable, object);
+                /*return new Promise(function(){
+                    });*/
+                    // enable 2 simultaneously tracked targets
+                    /*api.setHint(Argon.VuforiaHint.MaxSimultaneousImageTargets, 2).then(function (result) {
+                        console.log("setHint " + (result ? "succeeded" : "failed"));
+                    })["catch"](function (err) {
+                        console.log("could not set hint: " + err.message);
+                });*/ 
+            }
         })["catch"](function (err) {
             console.log("vuforia failed to initialize: " + err.message);
         });
@@ -661,6 +730,8 @@ argonuiDiv = document.getElementById("argon");
 // Set the pointermove event listener for showing the line while connecting
 argonuiDiv.addEventListener("pointermove", mantainLine);
 
+
+//////////////////////// DELETE LINES /////////////////////////////////
 // Set the events listeners for deleting the lines
 // Event triggered when selecting first connection point
 argonuiDiv.addEventListener("pointerup", function(event){
@@ -806,8 +877,6 @@ var secondMarker = new THREE.CSS3DObject(container1);
 secondMarker.position.z = -0.5;
 userLocation.add(secondMarker);
 secondMarker.scale.set(0.001, 0.001, 0.001);
-
-
 
 app.vuforia.isAvailable().then(function (available) {
     // vuforia not available on this platform
