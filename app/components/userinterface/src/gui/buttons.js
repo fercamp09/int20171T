@@ -73,7 +73,7 @@ realityEditor.gui.buttons.preload = function(array) {
 		array[i].src = this.preload.arguments[i + 1];
 	}
 
-	this.cout("preload");
+	//this.cout("preload");
 };
 
 
