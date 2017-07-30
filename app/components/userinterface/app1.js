@@ -397,6 +397,7 @@ function generateUI(interfaceName,x, y){
     iframe.className = 'interactive';
     iframe.style.height = "250px";
     iframe.style.width = "250px";
+    div.style.position = "absolute";
     div.style.left = x;
     div.style.top = y;
     div.appendChild(iframe);
@@ -440,6 +441,7 @@ function createNodes(id, x1, y1, x2, y2){
 
 // Transform the datatypes from the json received from the server to the objects representation in the app
 function mapObjects(json){
+    console.log(json);
     for (var i in json){
         var dev = json[i];
         /////// Device //////
@@ -457,14 +459,19 @@ function mapObjects(json){
         /////// Object ///////    
         for (var key in dev.objects){
             var obj = dev.objects[key];
+            // Set the node depending on the type
             
             // Convert to Node 
             object1.nodes[key] = new Node();
             var node = object1.nodes[key];
             node.x = obj.x;
             node.y = obj.y;
-            node.src = obj.src;
-            
+            //node.src = obj.src;
+            if (obj.type == "Emisor"){
+                node.src = "emisor";
+            } else if (obj.type == "Receptor"){
+                node.src = "receptor";
+            }
             // Generate interface for node
             var nodeID = object1.name + "-" + key;
             var container = drawMarker(node.x, node.y, nodeID, node.src);
@@ -476,9 +483,10 @@ function mapObjects(json){
             for (var key in obj.actions){
                 var action = obj.actions[key];
                 if (action.src !== undefined && action.src != ""){
-                    //object1.interfaces[key] = generateUI('http://200.126.23.63:1337/vuforia/'+ action.src +'/index.html');
+                    // object1.interfaces[key] = generateUI('http://200.126.23.63:1337/vuforia/'+ action.src +'/index.html');
                     // Create interface for action
-                    object1.interfaces[key] = generateUI(action.src +'/index.html', action.x, action.y);
+                    //object1.interfaces[key] = generateUI(action.src +'/index.html', node.x, node.y);
+                    //object1.interfaces[key] = generateUI(action.src +'/index.html', action.x, action.y);
                 }
             }
         }
@@ -495,6 +503,7 @@ function mapObjects(json){
             makeConnection(objectA, objectB, nodeA, nodeB);
         }
     }    
+    
 }
 // objectID: string
 function loadObject(id){
@@ -670,6 +679,119 @@ function activateTargets(){
         });
     });
 }
+function activateTargets1(){
+    app.vuforia.isAvailable().then(function (available) {
+        // vuforia not available on this platform
+        if (!available) {
+            console.warn("vuforia not available on this platform.");
+            return;
+        }
+        // tell argon to initialize vuforia for our app, using our license information.
+        app.vuforia.init({
+            encryptedLicenseData: "-----BEGIN PGP MESSAGE-----\nVersion: OpenPGP.js v2.3.2\nComment: http://openpgpjs.org\n\n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\nCDjUbY1FxwlVJ4UZ7lz+8jWHO5jYY99adPoATpUaWYxm9oPxz/QR4kvgvLjl\n9Ti8379Y8qihzqsRmf6YLYyggknlt9Uyl2HjA+1zcwbDnb3I6g/XjTFUPy1D\nxZqqSEuCNDLh7m1+GDA3KXQnLIqOdcxOVzyFCDtKI9c6b0D0ezNkxUjgkoIp\nmxSSLDjzmHuPLsQVwqxP4KNU1gT7mXTnhlhsG2Vll/WZD+tuzGK8h9anf6/p\n4pCk61Dhj1hmb9msTaK4FGhmBMtJ6kQ4SzGOfFKG5IElAHidYgd0iz7AqEzX\nGttDkcHGM9iPIYUBY2r/538M/kxeVx5fBiWEkmWz5FMzqPRs3GZWYiAb2tnp\nWSDXW3B1mwznwcCkyUP6OP/c6FFmb6Rag/ZaItVAvVjmA7tXICLJPhYIs9hE\nI6zJSVZ81YtKg9Nb6Rx49qf18pQ1SWZNGrZrWaTJTLu4cu4c5v/czY5kyT0Y\n8RqNUlI5hwWU8G9LpJ5jv8dssrgcweTG/PEbCkzqz0R6W6VgDUyqo6WSGgoS\nB9or791lGcDazNT6CJ4/2Z1wBd4BSHkhSwfcPovGOleZFE24gLiG6puHyVjk\nWEIir2WXzhypwLkG/dn+ZJW1ezOvTb4gVVILHrWhNh8=\n=LoZg\n-----END PGP MESSAGE-----"
+        }).then(function (api) {
+            // We can load a second dataset and have both active simultaneously.
+            // Load the Vuforia Stones and Chips targets, and set the MaxSimultaneousImageTargets hint
+            // to 2 so two targets can be tracked simultaneously.
+            api.objectTracker.createDataSet("../resources/datasets/StonesAndChips.xml").then(function (dataSet) {
+                // the data set has been succesfully downloaded
+                // tell vuforia to load the dataset.  
+                dataSet.load().then(function () {
+                    // when it is loaded, we retrieve a list of trackables defined in the
+                    // dataset and set up the content for the target
+                    var trackables = dataSet.getTrackables();
+                    // tell argon we want to track a specific trackable.  Each trackable
+                    // has a Cesium entity associated with it, and is expressed in a 
+                    // coordinate frame relative to the camera.  Because they are Cesium
+                    // entities, we can ask for their pose in any coordinate frame we know
+                    // about.
+                    var stonesEntity = app.context.subscribeToEntityById(trackables["stones"].id);
+                    var chipsEntity = app.context.subscribeToEntityById(trackables["chips"].id);
+                    // create a THREE object to put on the trackable
+                    var stonesObject = new THREE.Object3D;
+                    var chipsObject = new THREE.Object3D;
+                    scene.add(stonesObject);
+                    scene.add(chipsObject);
+                    //stonesObject.add(stonesTextObject);
+                    //chipsObject.add(chipsTextObject);
+                        
+                    for (var key in objects["photon1"].frames){
+                            var node = objects["photon1"].frames[key];  
+                            stonesObject.add(node);
+                            node.position.z = -0.1; // 0
+                    }
+                    description.innerHTML = description.innerHTML+ "photon1-";
+                    
+                    for (var key in objects["photon2"].frames){
+                            var node = objects["photon2"].frames[key];  
+                            chipsObject.add(node);
+                            node.position.z = -0.1; // 0
+                    }
+                    description.innerHTML = description.innerHTML+ "photon2-";
+                     
+                    // the updateEvent is called each time the 3D world should be
+                    // rendered, before the renderEvent.  The state of your application
+                    // should be updated here.
+                    app.context.updateEvent.addEventListener(function () {
+                        // get the pose (in local coordinates) of each target
+                        var stonesPose = app.context.getEntityPose(stonesEntity);
+                        var chipsPose = app.context.getEntityPose(chipsEntity);
+                        // if the pose is known the target is visible, so set the
+                        // THREE object to the location and orientation
+                        if (stonesPose.poseStatus & Argon.PoseStatus.KNOWN) {
+                            stonesObject.position.copy(stonesPose.position);
+                            stonesObject.quaternion.copy(stonesPose.orientation);
+                        }
+                        if (chipsPose.poseStatus & Argon.PoseStatus.KNOWN) {
+                            chipsObject.position.copy(chipsPose.position);
+                            chipsObject.quaternion.copy(chipsPose.orientation);
+                        }
+                        // when the target is first seen after not being seen, the 
+                        // status is FOUND.  Here, we show the content.
+                        // when the target is first lost after being seen, the status 
+                        // is LOST.  Here, we hide the content.
+                        ;
+                        
+                        for (var key in objects["photon1"].frames){
+                            var node = objects["photon1"].frames[key];  
+                            if (chipsPose.poseStatus & Argon.PoseStatus.FOUND) {
+                                node.visible = true;
+                            }
+                            else if (chipsPose.poseStatus & Argon.PoseStatus.LOST) {
+                                node.visible = false;
+                            }
+                        }
+                        for (var key in objects["photon2"].frames){
+                            var node = objects["photon2"].frames[key]; 
+                            if (stonesPose.poseStatus & Argon.PoseStatus.FOUND) {
+                                node.visible = true;
+                            }
+                            else if (stonesPose.poseStatus & Argon.PoseStatus.LOST) {
+                                node.visible = false;
+                            }
+                        } 
+                    });
+                })["catch"](function (err) {
+                    console.log("could not load dataset: " + err.message);
+                });
+                // activate the dataset.
+                api.objectTracker.activateDataSet(dataSet);
+                description.innerHTML = description.innerHTML+ "activated";
+                // enable 2 simultaneously tracked targets
+                api.setHint(Argon.VuforiaHint.MaxSimultaneousImageTargets, 2).then(function (result) {
+                    console.log("setHint " + (result ? "succeeded" : "failed"));
+                    description.innerHTML = description.innerHTML+ "set hint"+ result;
+                })["catch"](function (err) {
+                    console.log("could not set hint: " + err.message);
+                    description.innerHTML = description.innerHTML+err.message;
+                });
+                description.innerHTML = description.innerHTML+ "-done";
+            });
+        })["catch"](function (err) {
+            console.log("vuforia failed to initialize: " + err.message);
+        });
+    });
+}
 
 /////////////////////////////// Start App /////////////////////////////
 // set up Argon
@@ -748,7 +870,7 @@ argonuiDiv.addEventListener("pointerdown", function(event){
 hud.hudElements[0].appendChild(globalCanvas.canvas);
 
 loadObject(1);
-//loadObject(2);
+
 /*var stonesTextObject = new THREE.Object3D();
 userLocation.add(stonesTextObject);
 stonesTextObject.visible = false;
@@ -818,7 +940,7 @@ function createTextMesh(font, text, material) {
     return textMesh;
 }*/
 
-activateTargets();
+activateTargets1();
 
 /*
 var deleteFlag = false;
