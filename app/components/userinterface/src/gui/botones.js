@@ -6,7 +6,7 @@ realityEditor.gui.botones.onload = function () {
 
 window.onload = realityEditor.gui.botones.onload;
 
-var seleccionado;
+var seleccionado = 1;
 
 (function(exports) {
     var buttonImages = [];
