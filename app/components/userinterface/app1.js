@@ -259,6 +259,49 @@ function deleteLines(x21, y21, x22, y22) {
     }
 }
 
+function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEndWeight, linkObject, timeCorrector, startColor, endColor, speed) {
+    if(!speed) speed = 1;
+    var angle = Math.atan2((lineStartPoint[1] - lineEndPoint[1]), (lineStartPoint[0] - lineEndPoint[0]));
+    var possitionDelta = 0;
+    var length1 = lineEndPoint[0] - lineStartPoint[0];
+    var length2 = lineEndPoint[1] - lineStartPoint[1];
+    var lineVectorLength = Math.sqrt(length1 * length1 + length2 * length2);
+    var keepColor = lineVectorLength / 6;
+    var spacer = 2.3;
+    var ratio = 0;
+    var mathPI = 2*Math.PI;
+    var newColor = [255,255,255,1.0];
+        
+    var colors = [[0,255,255], // Blue
+        [0,255,0],   // Green
+        [255,255,0], // Yellow
+        [255,0,124],
+        [255,255,255]];// Red
+
+    //if (linkObject.ballAnimationCount >= lineStartWeight * spacer)  linkObject.ballAnimationCount = 0;
+
+    //while (possitionDelta + linkObject.ballAnimationCount < lineVectorLength) {
+        var ballPossition = possitionDelta; //+ linkObject.ballAnimationCount;
+
+        ratio = 10;//this.ar.utilities.map(ballPossition, 0, lineVectorLength, 0, 1);
+        for (var i = 0; i < 3; i++) {
+            newColor[i] = (Math.floor(parseInt(colors[startColor][i], 10) + (colors[endColor][i] - colors[startColor][i]) * ratio));
+        }
+
+        var ballSize = 20;//this.ar.utilities.map(ballPossition, 0, lineVectorLength, lineStartWeight, lineEndWeight);
+
+        var x__ = lineStartPoint[0] - Math.cos(angle) * ballPossition;
+        var y__ = lineStartPoint[1] - Math.sin(angle) * ballPossition;
+        possitionDelta += ballSize * spacer;
+        context.beginPath();
+        context.fillStyle = "rgba("+newColor+")";
+        context.arc(x__, y__, ballSize, 0, mathPI);
+        context.fill();
+    //}
+    //linkObject.ballAnimationCount += (lineStartWeight * timeCorrector.delta)+speed;
+}
+
+
 // Draw a dotted line from a start point to a finish point on a canvas 
 function drawDotLine(context, lineStartPoint, lineEndPoint, b1, b2) {
 	context.beginPath();
@@ -323,6 +366,46 @@ function sendCreateLinkOO(nodeA , nodeB) {
     });
 }
 
+// Creates a link between objects in the server
+function executeAction(actionCode, value) {
+    $.ajax({
+        // la URL para la petición
+        url : 'http://200.126.23.138:1880/MODIFY/ACTION4',
+        // The information to send as parameters
+        data : { 
+                 code: actionCode, 
+                 value: value
+               },
+        // POST or GET or some http method
+        type : 'GET',
+        // Information return type
+        dataType : 'json',
+        // Information send type
+        contentType: 'text/plain',
+        xhrFields: {
+            // The 'xhrFields' property sets additional fields on the XMLHttpRequest.
+            // This can be used to set the 'withCredentials' property.
+            // Set the value to 'true' if you'd like to pass cookies to the server.
+            // If this is enabled, your server must respond with the header
+            // 'Access-Control-Allow-Credentials: true'.
+            withCredentials: false
+        },
+        // When the request is successful 
+        success : function(json){console.log(json);},
+        // When the request fails 
+        // status code: status
+        // xhr: raw petition
+        error : function(xhr, status) {
+            console.log('Disculpe, existió un problema');
+        },
+        // Executes no matter what, when the petition has been executed
+        complete : function(xhr, status) {
+           console.log('Acción modificada');
+        }
+    });
+}
+
+
 // Deletes a link between objects in the server
 function sendDeleteLinkOO(nodeA , nodeB){
     $.ajax({
@@ -371,19 +454,19 @@ function makeConnectionOnServer(objectA, objectB, nodeA, nodeB){
 
 
 // Position interface in Three.js: HTML content (could be a div, iframe)
-function positionInterfaceIn3D(interface, x, y) {
+function positionInterfaceIn3D(interface, x, y, scale) {
     var augmentedInterface = new THREE.CSS3DObject(interface);
     augmentedInterface.position.z = -0.5;
     augmentedInterface.position.x = x; // 0
     augmentedInterface.position.y = y; // 0        
     userLocation.add(augmentedInterface);
-    augmentedInterface.scale.set(0.0005, 0.0005, 0.0005 );
+    augmentedInterface.scale.set(scale, scale, scale ); // 0.0005
     return augmentedInterface;
 }
 
 // Generate an interface to position in 3D, based on the name
 // interfaceName: string
-function generateUI(interfaceName,x, y){
+function generateUI(interfaceName, x, y, id){
     //interfaceName = 'http://200.126.23.63:1337/vuforia/knob/index.html';
     
     // Create the HTML to place in the scene graph
@@ -402,9 +485,20 @@ function generateUI(interfaceName,x, y){
     div.style.position = "absolute";
     //div.style.left = x;
     //div.style.top = y;
+
+    // Send action id for updating the id of the interface and use it to send a message to the action
+    iframe.onload = function(){
+		// Get frame window
+		var frameWindow = iframe.contentWindow;
+		
+		// Send a message to the frame's window
+		var msg = {nodeName: id};
+		frameWindow.postMessage(msg, '*');
+    };
+
     div.appendChild(iframe);
 
-    return positionInterfaceIn3D(div, x, y);
+    return positionInterfaceIn3D(div, x, y, 0.0008);
 }
 
 // Generate object
@@ -479,7 +573,7 @@ function mapObjects(json){
             var container = drawMarker(node.x, node.y, nodeID, node.src);
             container.className = 'interactive';
             object1.nodes[key] = container;
-            object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y);
+            object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0006);
 
             /////// Action //////
             for (var key in obj.actions){
@@ -488,7 +582,7 @@ function mapObjects(json){
                     // object1.interfaces[key] = generateUI('http://200.126.23.63:1337/vuforia/'+ action.src +'/index.html');
                     // Create interface for action
                     // object1.interfaces[key] = generateUI(action.src +'/index.html', node.x, node.y);
-                    object1.interfaces[key] = generateUI(action.src +'/index.html', action.x, action.y);
+                    object1.interfaces[key] = generateUI(action.src +'/index.html', action.x, action.y, action.code);
                 }
             }
         }
@@ -525,7 +619,7 @@ function loadObject(id){
             // Set the value to 'true' if you'd like to pass cookies to the server.
             // If this is enabled, your server must respond with the header
             // 'Access-Control-Allow-Credentials: true'.
-            withCredentials: true
+            withCredentials: false
         },
         // When the request is successful 
         success : mapObjects,
@@ -861,6 +955,17 @@ function activateTargets1(){
 }
 
 /////////////////////////////// Start App /////////////////////////////
+// Setup Socketio
+//var socket = io("http://200.126.23.138:1880", {transports: ['websocket']});
+/*var socket = io("http://192.168.33.10:1880", {transports: ['websocket']});
+
+socket.on('object', function(socket){
+  console.log('a user connected');
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+  });
+});
+socket.emit('object', 1);*/ 
 // set up Argon
 var app = Argon.init();
 // set up THREE.  Create a scene, a perspective camera and an object
@@ -1009,6 +1114,13 @@ function createTextMesh(font, text, material) {
 
 activateTargets();
 
+window.addEventListener("message", function (e) {
+    var msg = e.data;
+    if (typeof msg.action !== "undefined" && typeof msg.value !== "undefined") {
+        console.log("Hey!");
+        executeAction(msg.action, msg.value);
+    }
+  });
 /*
 var deleteFlag = false;
 */
@@ -1184,7 +1296,8 @@ function updateLines(){
     
             // Use position obtained for drawing a new line based on markers connected.*/
             drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
-       
+            //drawLine(globalCanvas.context, connect.startPoint, connect.endPoint, 1, 1, link, timeCorrection, 1, 1 );
+            //this.drawLine(context, [bA.screenX, bA.screenY], [bB.screenX, bB.screenY], bAScreenZ, bBScreenZ, l, timeCorrection,logicA,logicB);
             //if (!deleteFlag){
                 // drawDotLine(globalCanvas.context, [ connect.startPoint[0], connect.endPoint[1]], [connect.endPoint[0], connect.startPoint[1]], 0, 0);
                 // console.log (realityEditor.gui.utilities.checkLineCross(connect.startPoint[0], connect.startPoint[1], connect.endPoint[0], connect.endPoint[1], connect.startPoint[0], connect.endPoint[1], connect.endPoint[0], connect.startPoint[1], globalCanvas.canvas.width, globalCanvas.canvas.height));

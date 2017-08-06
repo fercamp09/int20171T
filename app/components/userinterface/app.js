@@ -281,7 +281,6 @@ app.vuforia.isAvailable().then(function (available) {
                         argonTextObject.position.z = 0;
                         //gvuBrochureObject.add(points);
                         //points.position.z = 0;
-                        
                     }
                     else if (gvuBrochurePose.poseStatus & Argon.PoseStatus.LOST) {
                         argonTextObject.position.z = -0.50;

@@ -94,17 +94,15 @@ input[type=checkbox]:checked + label {
 
 </head>
 <body style="width: 200px; height: 200px;">
-
+  <!-- Switch -->
   <input type='checkbox' name="checkbox" id="checkbox"   />
   <label for="checkbox"> </label>
-
-
+  
+  <!-- Slider -->
   <div id="knob-container" class="">
       <p id="knob-value" style="height: 50px;">50</p>
-
       <input id="futureKnob" type="range" min="0" max="360" data-width="200" data-height="200"   data-angleRange="360" value="20">
   </div>
-
 
 <script>
 
@@ -178,11 +176,12 @@ function doClick() {
 /////////// HybridObjects //////////
 
 // initialize the Hybrid Object
-
+var checkBoxAction = "";
 var checkbox = document.getElementById('checkbox');
 var checkboxValue = checkbox.checked;
 var checkboxPrevValue = checkbox.checked;
 
+var sliderAction = "";
 var slider = document.getElementById('futureKnob');
 var sliderValue = slider.value;
 var sliderPrevValue = slider.value;
@@ -198,7 +197,12 @@ ho.addReadListener('brightness', function(value) {
 setInterval(function() {
   checkboxValue = checkbox.checked;
   if (checkboxPrevValue !== checkboxValue)  {
-      if(touchState) ho.write("brightness", checkboxValue ? 1 : 0);
+      //if(touchState) ho.write("brightness", checkboxValue ? 1 : 0);
+      var msg = {
+        action: checkBoxAction,
+        value: checkboxValue ? 1 : 0
+      };
+      window.parent.postMessage(msg, '*');
       checkboxPrevValue = checkboxValue;
       if(checkboxValue) {
 
@@ -210,7 +214,7 @@ setInterval(function() {
   sliderValue = slider.value / 360 ;
   if (sliderPrevValue !== sliderValue )  {
     if (touchState) {
-      ho.write("brightness", sliderValue);
+      //ho.write("brightness", sliderValue);
     }
     sliderPrevValue = sliderValue;
     knobValueText.innerHTML = Math.round(sliderValue * 100);
@@ -231,6 +235,13 @@ setInterval(function() {
     knobValueText.innerHTML =  Math.round(sliderValue * 100);
   }
 }, 50);
+
+  window.addEventListener("message", function (e) {
+	    var msg = e.data;
+      if (typeof msg.nodeName !== "undefined") {
+        checkBoxAction = msg.nodeName;
+      }
+  });
   </script>
 </body>
 </html>
