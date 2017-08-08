@@ -24,8 +24,12 @@ function click(e){
 		// Send a message to the frame's window
 		var msg = { uiActionFeedback: 0};
 		frameWindow.postMessage(msg, '*');
-		
+
+        // Show cancel button
+        var cancelButton = document.getElementById("cancelButton");
+		cancelButton.style.visibility = "visible";
 	} else {
+        // If selected the same node, reset the state
 		if (e.target.id == globalConnect.objectA+'-'+globalConnect.nodeA){ 
 			reset();
 			return;
@@ -55,12 +59,15 @@ function reset (){
 	var msg = { uiActionFeedback: 1};
 	frameWindow.postMessage(msg, '*');
 	       	
-    globalConnect.  nodeA = "";
+    globalConnect.nodeA = "";
     globalConnect.nodeB = "";    
     globalConnect.click = false;
     globalConnect.connected = false;
-    
-}
+    // Hide cancel button
+    var cancelButton = document.getElementById("cancelButton");
+	cancelButton.style.visibility = "hidden";
+            
+}    
 
 // Get the window positions of two html elements
 function getPointsFromNodes(nodeA, nodeB){
@@ -259,8 +266,21 @@ function deleteLines(x21, y21, x22, y22) {
     }
 }
 
+// From Reality Editor and OpenHybrid (ar.utilities)
+function map (x, in_min, in_max, out_min, out_max) {
+	if (x > in_max) x = in_max;
+	if (x < in_min) x = in_min;
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+};
+
+function timeSynchronizer (timeing) {
+	timeing.now = Date.now();
+	timeing.delta = (timeing.now - timeing.then) / 198;
+	timeing.then = timeing.now;
+};
+
 function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEndWeight, linkObject, timeCorrector, startColor, endColor, speed) {
-    if(!speed) speed = 1;
+    if(!speed) speed = 0.1;
     var angle = Math.atan2((lineStartPoint[1] - lineEndPoint[1]), (lineStartPoint[0] - lineEndPoint[0]));
     var possitionDelta = 0;
     var length1 = lineEndPoint[0] - lineStartPoint[0];
@@ -278,17 +298,17 @@ function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEn
         [255,0,124],
         [255,255,255]];// Red
 
-    //if (linkObject.ballAnimationCount >= lineStartWeight * spacer)  linkObject.ballAnimationCount = 0;
+    if (linkObject.ballAnimationCount >= lineStartWeight * spacer)  linkObject.ballAnimationCount = 0;
 
-    //while (possitionDelta + linkObject.ballAnimationCount < lineVectorLength) {
-        var ballPossition = possitionDelta; //+ linkObject.ballAnimationCount;
+    while (possitionDelta + linkObject.ballAnimationCount < lineVectorLength) {
+        var ballPossition = possitionDelta + linkObject.ballAnimationCount;
 
-        ratio = 10;//this.ar.utilities.map(ballPossition, 0, lineVectorLength, 0, 1);
+        ratio = map(ballPossition, 0, lineVectorLength, 0, 1);
         for (var i = 0; i < 3; i++) {
             newColor[i] = (Math.floor(parseInt(colors[startColor][i], 10) + (colors[endColor][i] - colors[startColor][i]) * ratio));
         }
 
-        var ballSize = 20;//this.ar.utilities.map(ballPossition, 0, lineVectorLength, lineStartWeight, lineEndWeight);
+        var ballSize = map(ballPossition, 0, lineVectorLength, lineStartWeight, lineEndWeight);
 
         var x__ = lineStartPoint[0] - Math.cos(angle) * ballPossition;
         var y__ = lineStartPoint[1] - Math.sin(angle) * ballPossition;
@@ -297,8 +317,8 @@ function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEn
         context.fillStyle = "rgba("+newColor+")";
         context.arc(x__, y__, ballSize, 0, mathPI);
         context.fill();
-    //}
-    //linkObject.ballAnimationCount += (lineStartWeight * timeCorrector.delta)+speed;
+    }
+    linkObject.ballAnimationCount += (lineStartWeight * timeCorrector.delta)+speed;
 }
 
 
@@ -1003,6 +1023,10 @@ hud.hudElements[0].appendChild(description);
 var stats = new Stats();
 hud.hudElements[0].appendChild(stats.dom);
 
+var cancelButton = document.getElementById("cancelButton");
+cancelButton.addEventListener('pointerdown', function() {
+	reset();
+});
 //var buttons = document.getElementById('UIButtons');
 //hud.hudElements[0].appendChild(buttons);
 
@@ -1258,7 +1282,19 @@ app.vuforia.isAvailable().then(function (available) {
 function updateLines(){
     // Erase all lines (empty the canvas)
     globalCanvas.context.clearRect(0, 0, globalCanvas.canvas.width, globalCanvas.canvas.height);
-    
+    if (globalConnect.connected){
+        //globalCanvas.context
+        globalCanvas.context.beginPath();
+        //globalCanvas.context.fillStyle = ;
+        globalCanvas.context.lineWidth="15 ";
+        globalCanvas.context.strokeStyle="rgba("+ [255,0,0,0.5]+")";
+        globalCanvas.context.rect(0, 0,  globalStates.height, globalStates.width  );
+        //globalCanvas.context.fill();
+        globalCanvas.context.stroke();
+    }
+    // Correct time
+    timeSynchronizer(timeCorrection);
+
     // When a marker is clicked, globalConnect.click is set to true
     // When the second marker is clicked, globalConnect.connected is set to true
     if (globalConnect.click){
@@ -1280,7 +1316,7 @@ function updateLines(){
             globalConnect.endPoint[0] = rect.left + rect.width/2;
         }*/
         drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
-        
+           
     }
     
     // Update the connection lines found in every object
@@ -1293,11 +1329,14 @@ function updateLines(){
             var nodeB = objects[link.objectB].nodes[link.nodeB];
             // Obtain the actual position points of the markers 
             var connect = getPointsFromNodes(nodeA, nodeB);
-    
-            // Use position obtained for drawing a new line based on markers connected.*/
-            drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
-            //drawLine(globalCanvas.context, connect.startPoint, connect.endPoint, 1, 1, link, timeCorrection, 1, 1 );
-            //this.drawLine(context, [bA.screenX, bA.screenY], [bB.screenX, bB.screenY], bAScreenZ, bBScreenZ, l, timeCorrection,logicA,logicB);
+            
+            if (isNaN(link.ballAnimationCount))
+			    link.ballAnimationCount = 0;
+            
+            // Use position obtained for drawing a new line based on markers connected.
+            //drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
+            drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
+
             //if (!deleteFlag){
                 // drawDotLine(globalCanvas.context, [ connect.startPoint[0], connect.endPoint[1]], [connect.endPoint[0], connect.startPoint[1]], 0, 0);
                 // console.log (realityEditor.gui.utilities.checkLineCross(connect.startPoint[0], connect.startPoint[1], connect.endPoint[0], connect.endPoint[1], connect.startPoint[0], connect.endPoint[1], connect.endPoint[0], connect.startPoint[1], globalCanvas.canvas.width, globalCanvas.canvas.height));
