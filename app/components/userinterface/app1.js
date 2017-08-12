@@ -278,8 +278,240 @@ function timeSynchronizer (timeing) {
 	timeing.delta = (timeing.now - timeing.then) / 198;
 	timeing.then = timeing.now;
 };
+/**
+ * @preserve
+ *
+ *                                      .,,,;;,'''..
+ *                                  .'','...     ..',,,.
+ *                                .,,,,,,',,',;;:;,.  .,l,
+ *                               .,',.     ...     ,;,   :l.
+ *                              ':;.    .'.:do;;.    .c   ol;'.
+ *       ';;'                   ;.;    ', .dkl';,    .c   :; .'.',::,,'''.
+ *      ',,;;;,.                ; .,'     .'''.    .'.   .d;''.''''.
+ *     .oxddl;::,,.             ',  .'''.   .... .'.   ,:;..
+ *      .'cOX0OOkdoc.            .,'.   .. .....     'lc.
+ *     .:;,,::co0XOko'              ....''..'.'''''''.
+ *     .dxk0KKdc:cdOXKl............. .. ..,c....
+ *      .',lxOOxl:'':xkl,',......'....    ,'.
+ *           .';:oo:...                        .
+ *                .cd,      ╔═╗┌┬┐┬┌┬┐┌─┐┬─┐    .
+ *                  .l;     ║╣  │││ │ │ │├┬┘    '
+ *                    'l.   ╚═╝─┴┘┴ ┴ └─┘┴└─   '.
+ *                     .o.                   ...
+ *                      .''''','.;:''.........
+ *                           .'  .l
+ *                          .:.   l'
+ *                         .:.    .l.
+ *                        .x:      :k;,.
+ *                        cxlc;    cdc,,;;.
+ *                       'l :..   .c  ,
+ *                       o.
+ *                      .,
+ *
+ *              ╦ ╦┬ ┬┌┐ ┬─┐┬┌┬┐  ╔═╗┌┐  ┬┌─┐┌─┐┌┬┐┌─┐
+ *              ╠═╣└┬┘├┴┐├┬┘│ ││  ║ ║├┴┐ │├┤ │   │ └─┐
+ *              ╩ ╩ ┴ └─┘┴└─┴─┴┘  ╚═╝└─┘└┘└─┘└─┘ ┴ └─┘
+ *
+ *
+ * Created by Valentin on 10/22/14.
+ *
+ * Copyright (c) 2015 Valentin Heun
+ *
+ * All ascii characters above must be included in any redistribution.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+/*********************************************************************************************************************
+ ******************************************** TODOS *******************************************************************
+ **********************************************************************************************************************
+ **
+ * TODO
+ **
+ **********************************************************************************************************************
+ ******************************************** Utilities Section ******************************************************
+ **********************************************************************************************************************/
+/**********************************************************************************************************************
+ **********************************************************************************************************************/
 
-function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEndWeight, linkObject, timeCorrector, startColor, endColor, speed) {
+/**
+ * @desc Multiply two 2d vectors or alternatively a 2d vector and a number.
+ * @param {Array} x 2d vector A
+ * @param {Array} y 2d vector B can also be of type {Number}
+ * @return {Array} representing the 2d vector
+ **/
+var vMN = function (x, y) {
+    return [(x[0] * y), (x[1] * y)];
+};
+
+/**********************************************************************************************************************
+ **********************************************************************************************************************/
+
+/**
+ * @desc Add two 2d vectors or alternatively a 2d vector and a number.
+ * @param {Array} x 2d vector A
+ * @param {Array} y 2d vector B can also be of type {Number}
+ * @return {Array} representing the 2d vector
+ **/
+
+var vA = function (x, y) {
+    return [x[0] + y[0], x[1] + y[1]];
+};
+
+
+/**********************************************************************************************************************
+ **********************************************************************************************************************/
+
+/**
+ * @desc Divide 2d two vectors or alternatively a 2d vector and a number.
+ * @param {Array} x 2d vector A
+ * @param {Array} y 2d vector B can also be of type {Number}
+ * @return {Array} representing the 2d vector
+ **/
+
+var vD = function (x, y) {
+    return [x[0] - y[0], x[1] - y[1]];
+};
+
+
+/**********************************************************************************************************************
+ **********************************************************************************************************************/
+
+/**
+ * @desc rotates a 2d vector by degrees.
+ * @param {Array} vector the 2d vector that will be rotated.
+ * @param {Number} rotation by how many degree the 2d vector should be rotated.
+ * @return {Array} representing the rotated 2d vector.
+ **/
+
+var vR = function (vector, rotation) {
+    return [Math.cos(rotation) * vector[0] - Math.sin(rotation) * vector[1],
+        Math.sin(rotation) * vector[0] + Math.cos(rotation) * vector[1]];
+};
+
+
+/**
+ * @desc
+ * @param context is html5 canvas object
+ * @param lineStartPoint is an array of two numbers indicating the start for a line
+ * @param lineEndPoint is an array of two numbers indicating the end for a line
+ * @param lineStartWeight is a number indicating the weight of a line at start
+ * @param lineEndWeight is a number indicating the weight of a line at end
+ * @return
+ **/
+
+function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEndWeight) {
+
+    // calculating all needed values for drawing the line
+    var linePointWeight2 = (lineStartWeight * 3 / 4) + (lineEndWeight / 4);
+    var linePointWeight3 = (lineStartWeight * 2 / 4) + (lineEndWeight * 2 / 4);
+    var linePointWeight4 = (lineStartWeight / 4) + (lineEndWeight * 3 / 4);
+
+    var lineNormAlizer = 10; // find a formula for better representation
+    var lineVector = vD(lineEndPoint, lineStartPoint);
+    var lineVectorLength = Math.sqrt((lineVector[0] * lineVector[0]) + (lineVector[1] * lineVector[1]));
+    var lineVectorNorm = [lineVector[0] / lineVectorLength, lineVector[1] / lineVectorLength];
+
+    var lineArrowVector = vMN(lineVectorNorm, 20);
+    var usedVector = vMN(lineVectorNorm, -18);
+    var lineArrowVectorN = vMN(vR(lineArrowVector, -90), 34 / 80);
+    var lineArrowVectorP = vMN(vR(lineArrowVector, 90), 34 / 80);
+    var lineEndBall = vA(lineStartPoint, lineVector);
+    var lineEnd = vA(vA(lineStartPoint, lineVector), vMN(lineVectorNorm, lineNormAlizer));
+    var lineEnd_ = vA(vA(lineStartPoint, lineVector), vMN(lineVectorNorm, lineNormAlizer - 10));
+    var lineEnd4 = vA(vA(lineStartPoint, vMN(lineVector, (1 / 4))), vMN(lineVectorNorm, lineNormAlizer));
+    var lineEnd3 = vA(vA(lineStartPoint, vMN(lineVector, (2 / 4))), vMN(lineVectorNorm, lineNormAlizer));
+    var lineEnd2 = vA(vA(lineStartPoint, vMN(lineVector, (3 / 4))), vMN(lineVectorNorm, lineNormAlizer));
+
+    // Drawing the line for when the touch point is more then 20 pixels awalineY from the touchdown
+    if (lineVectorLength > 20) {
+        /*context.beginPath();
+        context.arc(lineEndBall[0], lineEndBall[1], 7.5 * lineEndWeight, 0, Math.PI * 2);
+        //context.fillStyle = "#f9f90a";
+        context.fillStyle = "rgba("+ [249,249,10,0.5]+")";
+        context.fill();
+        context.closePath();*/
+
+        context.beginPath();
+        context.moveTo(vA(lineEnd, vMN(lineArrowVectorP, lineEndWeight))[0], vA(lineEnd, vMN(lineArrowVectorP, lineEndWeight))[1]);
+        context.lineTo(lineEnd[0], lineEnd[1]);
+        context.lineTo(vA(lineEnd, vMN(lineArrowVectorN, lineEndWeight))[0], vA(lineEnd, vMN(lineArrowVectorN, lineEndWeight))[1]);
+        context.lineTo(vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorN, linePointWeight4)))[0], vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorN, linePointWeight4)))[1]);
+        context.lineTo(vA(lineEnd2, usedVector)[0], vA(lineEnd2, usedVector)[1]);
+        context.lineTo(vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorP, linePointWeight4)))[0], vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorP, linePointWeight4)))[1]);
+        //context.fillStyle = "#f9f90a";
+        context.fillStyle = "rgba("+ [249,249,10,0.5]+")";
+        context.fill();
+        context.closePath();
+
+        context.beginPath();
+        context.moveTo(vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorP, linePointWeight4)))[0], vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorP, linePointWeight4)))[1]);
+        context.lineTo(lineEnd2[0], lineEnd2[1]);
+        context.lineTo(vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorN, linePointWeight4)))[0], vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorN, linePointWeight4)))[1]);
+        context.lineTo(vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorN, linePointWeight3)))[0], vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorN, linePointWeight3)))[1]);
+        context.lineTo(vA(lineEnd3, usedVector)[0], vA(lineEnd3, usedVector)[1]);
+        context.lineTo(vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorP, linePointWeight3)))[0], vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorP, linePointWeight3)))[1]);
+        context.fillStyle = "#a3fb5e";
+        context.fill();
+        context.closePath();
+
+        context.beginPath();
+        context.moveTo(vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorP, linePointWeight3)))[0], vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorP, linePointWeight3)))[1]);
+        context.lineTo(lineEnd3[0], lineEnd3[1]);
+        context.lineTo(vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorN, linePointWeight3)))[0], vA(lineEnd3, vA(usedVector, vMN(lineArrowVectorN, linePointWeight3)))[1]);
+        context.lineTo(vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorN, linePointWeight2)))[0], vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorN, linePointWeight2)))[1]);
+        context.lineTo(vA(lineEnd4, usedVector)[0], vA(lineEnd4, usedVector)[1]);
+        context.lineTo(vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorP, linePointWeight2)))[0], vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorP, linePointWeight2)))[1]);
+        context.fillStyle = "#53fdad";
+        context.fill();
+        context.closePath();
+
+        context.beginPath();
+        context.moveTo(vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorP, linePointWeight2)))[0], vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorP, linePointWeight2)))[1]);
+        context.lineTo(lineEnd4[0], lineEnd4[1]);
+        context.lineTo(vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorN, linePointWeight2)))[0], vA(lineEnd4, vA(usedVector, vMN(lineArrowVectorN, linePointWeight2)))[1]);
+        context.lineTo(vA(lineStartPoint, vMN(lineArrowVectorN, lineStartWeight))[0], vA(lineStartPoint, vMN(lineArrowVectorN, lineStartWeight))[1]);
+        context.lineTo(lineStartPoint[0], lineStartPoint[1]);
+        context.lineTo(vA(lineStartPoint, vMN(lineArrowVectorP, lineStartWeight))[0], vA(lineStartPoint, vMN(lineArrowVectorP, lineStartWeight))[1]);
+        //context.fillStyle = "#01fffd";
+        context.fillStyle = "rgba("+ [1,255,253,0.5]+")";
+        context.fill();
+        context.closePath();
+
+    }
+    // Drawing the line for when the touch point is less then 20 pixels awalineY from the touchdown
+    else {
+        context.beginPath();
+        context.moveTo(vA(lineEnd_, vMN(lineArrowVectorP, lineEndWeight))[0], vA(lineEnd_, vMN(lineArrowVectorP, lineEndWeight))[1]);
+        context.lineTo(lineEnd_[0], lineEnd_[1]);
+        context.lineTo(vA(lineEnd_, vMN(lineArrowVectorN, lineEndWeight))[0], vA(lineEnd_, vMN(lineArrowVectorN, lineEndWeight))[1]);
+        context.lineTo(vA(lineStartPoint, vMN(lineArrowVectorN, lineStartWeight))[0], vA(lineStartPoint, vMN(lineArrowVectorN, lineStartWeight))[1]);
+        context.lineTo(lineStartPoint[0], lineStartPoint[1]);
+        context.lineTo(vA(lineStartPoint, vMN(lineArrowVectorP, lineStartWeight))[0], vA(lineStartPoint, vMN(lineArrowVectorP, lineStartWeight))[1]);
+        context.fillStyle = "#00fdff";
+        context.fill();
+        context.closePath();
+
+        context.beginPath();
+        context.arc(lineEndBall[0], lineEndBall[1], 7.5 * lineEndWeight, 0, Math.PI * 2);
+        context.fillStyle = "#f9f90a";
+        context.fill();
+        context.closePath();
+
+    }
+    // Drawing the start point in anlineY case
+    /*context.beginPath();
+    context.arc(lineStartPoint[0], lineStartPoint[1], 8 * lineStartWeight, 0, Math.PI * 2);
+    //context.fillStyle = "#00fdff";
+    //context.fillStyle = "#01fffd";
+    context.fillStyle = "rgba("+ [1,255,253,0.5]+")";
+    context.fill();
+    context.closePath();*/
+}
+
+
+function drawAnimatedLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEndWeight, linkObject, timeCorrector, startColor, endColor, speed) {
     if(!speed) speed = 0.1;
     var angle = Math.atan2((lineStartPoint[1] - lineEndPoint[1]), (lineStartPoint[0] - lineEndPoint[0]));
     var possitionDelta = 0;
@@ -386,7 +618,7 @@ function sendCreateLinkOO(nodeA , nodeB) {
     });
 }
 
-// Creates a link between objects in the server
+// Executes an action in the server
 function executeAction(actionCode, value) {
     $.ajax({
         // la URL para la petición
@@ -986,6 +1218,7 @@ socket.on('object', function(socket){
   });
 });
 socket.emit('object', 1);*/ 
+
 // set up Argon
 var app = Argon.init();
 // set up THREE.  Create a scene, a perspective camera and an object
@@ -1037,9 +1270,9 @@ hud.hudElements[0].appendChild(overlay);
 app.view.element.appendChild(hud.domElement);
 // Create a canvas for drawing the lines   
 globalCanvas.canvas = document.getElementById('canvas');
-globalCanvas.canvas.width = globalStates.height;
-globalCanvas.canvas.height = globalStates.width;
-
+// set canvas size for drawing lines
+globalCanvas.canvas.width = globalStates.width;
+globalCanvas.canvas.height = globalStates.height;
 globalCanvas.context = canvas.getContext('2d');
 
 // Add event listeners 
@@ -1138,10 +1371,10 @@ function createTextMesh(font, text, material) {
 
 activateTargets();
 
+// Receive messages from iframes
 window.addEventListener("message", function (e) {
     var msg = e.data;
     if (typeof msg.action !== "undefined" && typeof msg.value !== "undefined") {
-        console.log("Hey!");
         executeAction(msg.action, msg.value);
     }
   });
@@ -1280,15 +1513,24 @@ app.vuforia.isAvailable().then(function (available) {
 
 // Function for updating the lines in every frame
 function updateLines(){
+    // For verifying that the phone changed direction
+    //if (globalStates.width != globalStates.lastWidth){
+        globalStates.width = window.innerWidth;
+        globalStates.height = window.innerHeight;
+        globalCanvas.canvas.width = globalStates.width;
+        globalCanvas.canvas.height = globalStates.height;
+    //}
+    //globalStates.lastWidth = globalStates.width;
     // Erase all lines (empty the canvas)
-    globalCanvas.context.clearRect(0, 0, globalCanvas.canvas.width, globalCanvas.canvas.height);
+    globalCanvas.context.clearRect(0, 0, globalStates.width, globalStates.height);
+    
     if (globalConnect.connected){
         //globalCanvas.context
         globalCanvas.context.beginPath();
         //globalCanvas.context.fillStyle = ;
         globalCanvas.context.lineWidth="15 ";
         globalCanvas.context.strokeStyle="rgba("+ [255,0,0,0.5]+")";
-        globalCanvas.context.rect(0, 0,  globalStates.height, globalStates.width  );
+        globalCanvas.context.rect(0, 0, globalStates.width, globalStates.height);
         //globalCanvas.context.fill();
         globalCanvas.context.stroke();
     }
@@ -1335,8 +1577,8 @@ function updateLines(){
             
             // Use position obtained for drawing a new line based on markers connected.
             //drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
-            drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
-
+            //drawAnimatedLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
+            drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1.5,  1.5);
             //if (!deleteFlag){
                 // drawDotLine(globalCanvas.context, [ connect.startPoint[0], connect.endPoint[1]], [connect.endPoint[0], connect.startPoint[1]], 0, 0);
                 // console.log (realityEditor.gui.utilities.checkLineCross(connect.startPoint[0], connect.startPoint[1], connect.endPoint[0], connect.endPoint[1], connect.startPoint[0], connect.endPoint[1], connect.endPoint[0], connect.startPoint[1], globalCanvas.canvas.width, globalCanvas.canvas.height));
@@ -1378,14 +1620,17 @@ app.renderEvent.addEventListener(function () {
 // the animation callback.  
 function renderFunc() {
     stats.update();
+    // get the subviews for the current frame
+    // var subviews = app.view.subviews;
     // if we have 1 subView, we're in mono mode.  If more, stereo.
-    var monoMode = subViews.length == 1;
+    var monoMode =  1;
     rAFpending = false;
     // set the renderer to know the current size of the viewport.
     // This is the full size of the viewport, which would include
     // both views if we are in stereo viewing mode
     renderer.setSize(viewport.width, viewport.height);
     hud.setSize(viewport.width, viewport.height);
+    
     // there is 1 subview in monocular mode, 2 in stereo mode
     for (var _i = 0, subViews_1 = subViews; _i < subViews_1.length; _i++) {
         var subview = subViews_1[_i];

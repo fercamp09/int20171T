@@ -73,8 +73,9 @@ var globalStates = {
 	ballSize: 6,
 	ballAnimationCount: 0,
     
-    width: window.innerHeight,
-    height: window.innerWidth,
+    width: window.innerWidth,
+	lastWidth: 0,
+    height: window.innerHeight,
 	guiState: "ui",
 	UIOffMode: false,
 	settingsButtonState: false,
