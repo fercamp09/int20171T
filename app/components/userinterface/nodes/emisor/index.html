@@ -155,6 +155,9 @@ color: #ff00ff">sensor</div>
 			//  thisText.innerHTML = objects[msg.object].nodes[msg.node].name;
 
         }*/
+        if (typeof msg.type !== "undefined") {
+			this.svg = activate(msg.type, elements);
+        }
 		if (typeof msg.nodeName !== "undefined") {
 			thisText.innerHTML = msg.nodeName;
         }

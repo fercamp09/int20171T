@@ -148,7 +148,7 @@ function touchEnd (e) {
 }
 
 // Used for creating a marker 
-function drawMarker(x, y, id, src) {
+function drawMarker(x, y, id, src, type) {
     // Create a div for positioning a div and an iframe
     var container0 = document.createElement('div');
     container0.style.height = "250px";
@@ -190,7 +190,7 @@ function drawMarker(x, y, id, src) {
 		var frameWindow = iframe.contentWindow;
 		
 		// Send a message to the frame's window
-		var msg = {nodeName: id};
+		var msg = {nodeName: id, type: type};
 		frameWindow.postMessage(msg, '*');
     };
     
@@ -590,7 +590,7 @@ function mapObjects(json){
             }
             // Generate interface for node
             var nodeID = object1.name + "-" + key;
-            var container = drawMarker(node.x, node.y, nodeID, node.src);
+            var container = drawMarker(node.x, node.y, nodeID, node.src, obj.element);
             container.className = 'interactive';
             object1.nodes[key] = container;
             object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0006);

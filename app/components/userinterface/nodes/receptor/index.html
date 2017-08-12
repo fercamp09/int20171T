@@ -96,7 +96,7 @@
 
 
 
-<div id="textNote" style="visibility: visible; position: absolute; overflow: hidden;top:190px;left:0px; width:220px; height:30px; text-align: center; font-size:1.6em; font-weight: bold; font-family: Helvetica, Arial, sans-serif;
+<div id="textNote" style="visibility: visible; position: absolute; overflow: hidden;top:190px;left:0px; width:220px; height:30px; text-align: center; font-size:3em; font-weight: bold; font-family: Helvetica, Arial, sans-serif;
 color: #ff00ff">sensor</div>
 
 <script>
@@ -122,7 +122,7 @@ color: #ff00ff">sensor</div>
         /*if (typeof msg.node !== "undefined" && typeof msg.object !== "undefined") {
             parent.postMessage(
                   //  {data :
-                            JSON.stringify({
+                            JSON.stringify({            
                         version: 170,
                         node: msg.node,
                         object: msg.object,
@@ -131,9 +131,9 @@ color: #ff00ff">sensor</div>
                         sendMatrix: false,
                         fullScreen: false
                    // })
-        })
-                    // this needs to contain the final interface source
+                  // this needs to contain the final interface source
                     , "*");
+                
             if(msg.nodes[msg.node]) {
 
                 if (msg.nodes[msg.node].text) {
@@ -148,13 +148,16 @@ color: #ff00ff">sensor</div>
                     document.getElementById("textNote").innerHTML = msg.nodes[msg.node].name;
                 }
             }
-            objects.node = msg.node;
-            objects.object = msg.object;
+            //objects.node = msg.node;
+            //objects.object = msg.object;
 
 			//  thisText.innerHTML = objects[msg.object].nodes[msg.node].name;
 
         }*/
-		if (typeof msg.nodeName !== "undefined") {
+        if (typeof msg.type !== "undefined") {
+			this.svg = activate(msg.type, elements);
+        }
+        if (typeof msg.nodeName !== "undefined") {
 			thisText.innerHTML = msg.nodeName;
         }
 		if (typeof msg.uiActionFeedback !== "undefined") {
