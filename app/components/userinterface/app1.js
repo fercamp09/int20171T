@@ -111,8 +111,6 @@ function touchStart (e) {
     globalConnect.nodeB = "";    
     globalConnect.click = false;
     //globalConnect.connected = true;
-    
-    
 }*/
     
 // Function used in the event listener of "mousemove", for 
@@ -148,7 +146,7 @@ function touchEnd (e) {
 }
 
 // Used for creating a marker 
-function drawMarker(x, y, id, src, type) {
+function drawMarker(x, y, id, src, type, name) {
     // Create a div for positioning a div and an iframe
     var container0 = document.createElement('div');
     container0.style.height = "250px";
@@ -171,7 +169,7 @@ function drawMarker(x, y, id, src, type) {
     // Create the iframe
     var iframe = document.createElement('iframe');
     //iframe.src = 'http://200.126.23.63:1337/vuforia/nodes/node/index.html';
-      iframe.src = 'nodes/' + src + '/index.html';
+    iframe.src = 'nodes/' + src + '/index.html';
     iframe.frameBorder = 0;
     //iframe.setAttribute("sandbox", "allow-forms allow-pointer-lock allow-same-origin allow-scripts");
     //iframe.className = 'interactive';
@@ -190,7 +188,7 @@ function drawMarker(x, y, id, src, type) {
 		var frameWindow = iframe.contentWindow;
 		
 		// Send a message to the frame's window
-		var msg = {nodeName: id, type: type};
+		var msg = {nodeName: name, type: type};
 		frameWindow.postMessage(msg, '*');
     };
     
@@ -441,7 +439,7 @@ function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEn
         context.lineTo(vA(lineEnd2, usedVector)[0], vA(lineEnd2, usedVector)[1]);
         context.lineTo(vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorP, linePointWeight4)))[0], vA(lineEnd2, vA(usedVector, vMN(lineArrowVectorP, linePointWeight4)))[1]);
         //context.fillStyle = "#f9f90a";
-        context.fillStyle = "rgba("+ [249,249,10,0.5]+")";
+        context.fillStyle = "rgba("+ [249,249,10,0.3]+")";
         context.fill();
         context.closePath();
 
@@ -475,7 +473,7 @@ function drawLine(context, lineStartPoint, lineEndPoint, lineStartWeight, lineEn
         context.lineTo(lineStartPoint[0], lineStartPoint[1]);
         context.lineTo(vA(lineStartPoint, vMN(lineArrowVectorP, lineStartWeight))[0], vA(lineStartPoint, vMN(lineArrowVectorP, lineStartWeight))[1]);
         //context.fillStyle = "#01fffd";
-        context.fillStyle = "rgba("+ [1,255,253,0.5]+")";
+        context.fillStyle = "rgba("+ [1,255,253,0.3]+")";
         context.fill();
         context.closePath();
 
@@ -764,17 +762,6 @@ function createObjectWithData(objectID, objectName){
     return object1;
 }
 
-// Generate object
-function createObjectWithData(objectID, objectName){
-    // Create object from data obtained from request
-    var object1 = new Objects();
-    object1.name = objectName; //object.code
-    object1.id = objectID;
-    // Add to collection of all objects
-    objects[object1.id] = object1;   
-    return object1;
-}
-
 // Generate nodes for object
 function createNodes(id, x1, y1, x2, y2){
     var nodes = {}; // A node is an object
@@ -822,7 +809,7 @@ function mapObjects(json){
             }
             // Generate interface for node
             var nodeID = object1.name + "-" + key;
-            var container = drawMarker(node.x, node.y, nodeID, node.src, obj.element);
+            var container = drawMarker(node.x, node.y, nodeID, node.src, obj.element, obj.name );
             container.className = 'interactive';
             object1.nodes[key] = container;
             object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0006);
@@ -919,7 +906,7 @@ function loadObject(id){
     // generateUI('http://200.126.23.63:1337/vuforia/knob/index.html');
 }
 
-//////////////////////////// Vuforia ////////////////////////////
+//////////////////////////// Vuforia /////////////////////////////////////////
 // Show the interfaces representing the actions of the objects (Not in use)
 function showInterfaces(object){
     for (var key in object.frames){
@@ -1002,6 +989,7 @@ function loadDataset(api, datasetPath, trackable, object){
                 // when the target is first lost after being seen, the status 
                 // is LOST.  Here, we move the 3D text object back to the world       
                 // Go through the objects nodes to be added to the target 
+                
                 // Hide the interface 
                 for (var key in object.interfaces){
                     var node = object.interfaces[key];  
@@ -1015,7 +1003,7 @@ function loadDataset(api, datasetPath, trackable, object){
                 for (var key in object.frames){
                     var node = object.frames[key];  
                     if (seleccionado == 1){
-                        node.visible = false;
+                        node.visible    = false;
                     } else if (seleccionado == 2){
                         node.visible = true;
                     } 
@@ -1206,7 +1194,7 @@ function activateTargets1(){
     });
 }
 
-/////////////////////////////// Start App /////////////////////////////
+/////////////////////////////// Start App ///////////////////////////////////
 // Setup Socketio
 //var socket = io("http://200.126.23.138:1880", {transports: ['websocket']});
 /*var socket = io("http://192.168.33.10:1880", {transports: ['websocket']});
@@ -1251,7 +1239,6 @@ var hud = new THREE.CSS3DArgonHUD();
 // the CSS3DArgonHUD hudElements[0].  We only put it in the left
 // hud since we'll be hiding it in stereo
 var description = document.getElementById('description');
-hud.hudElements[0].appendChild(description);
 // let's show the rendering stats
 var stats = new Stats();
 hud.hudElements[0].appendChild(stats.dom);
@@ -1298,77 +1285,10 @@ argonuiDiv.addEventListener("pointerdown", function(event){
 // Add the canvas to the hud
 hud.hudElements[0].appendChild(globalCanvas.canvas);
 
+// Load objects from server
 loadObject(1);
 
-/*var stonesTextObject = new THREE.Object3D();
-userLocation.add(stonesTextObject);
-stonesTextObject.visible = false;
-var chipsTextObject = new THREE.Object3D();
-userLocation.add(chipsTextObject);
-chipsTextObject.visible = false;
-var loader = new THREE.FontLoader();
-loader.load('../resources/fonts/helvetiker_bold.typeface.json', function (font) {
-    var shaderMaterial = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader: "\n            uniform float amplitude;\n            attribute vec3 customColor;\n            attribute vec3 displacement;\n            varying vec3 vNormal;\n            varying vec3 vColor;\n            void main() {\n                vNormal = normal;\n                vColor = customColor;\n                vec3 newPosition = position + normal * amplitude * displacement;\n                gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );\n            }\n        ",
-        fragmentShader: "\n            varying vec3 vNormal;\n            varying vec3 vColor;\n            void main() {\n                const float ambient = 0.4;\n                vec3 light = vec3( 1.0 );\n                light = normalize( light );\n                float directional = max( dot( vNormal, light ), 0.0 );\n                gl_FragColor = vec4( ( directional + ambient ) * vColor, 1.0 );\n            }\n        "
-    });
-    var stonesTextMesh = createTextMesh(font, "stones", shaderMaterial);
-    stonesTextObject.add(stonesTextMesh);
-    stonesTextObject.scale.set(0.001, 0.001, 0.001);
-    var chipsTextMesh = createTextMesh(font, "chips", shaderMaterial);
-    chipsTextObject.add(chipsTextMesh);
-    chipsTextObject.scale.set(0.001, 0.001, 0.001);
-    // add an argon updateEvent listener to slowly change the text over time.
-    // we don't have to pack all our logic into one listener.
-    app.context.updateEvent.addEventListener(function () {
-        uniforms.amplitude.value = 1.0 + Math.sin(Date.now() * 0.001 * 0.5);
-    });
-});
-function createTextMesh(font, text, material) {
-    var textGeometry = new THREE.TextGeometry(text, {
-        font: font,
-        size: 40,
-        height: 5,
-        curveSegments: 3,
-        bevelThickness: 2,
-        bevelSize: 1,
-        bevelEnabled: true
-    });
-    textGeometry.center();
-    var tessellateModifier = new THREE.TessellateModifier(8);
-    for (var i = 0; i < 6; i++) {
-        tessellateModifier.modify(textGeometry);
-    }
-    var explodeModifier = new THREE.ExplodeModifier();
-    explodeModifier.modify(textGeometry);
-    var numFaces = textGeometry.faces.length;
-    var bufferGeometry = new THREE.BufferGeometry().fromGeometry(textGeometry);
-    var colors = new Float32Array(numFaces * 3 * 3);
-    var displacement = new Float32Array(numFaces * 3 * 3);
-    var color = new THREE.Color();
-    for (var f = 0; f < numFaces; f++) {
-        var index = 9 * f;
-        var h = 0.07 + 0.1 * Math.random();
-        var s = 0.5 + 0.5 * Math.random();
-        var l = 0.6 + 0.4 * Math.random();
-        color.setHSL(h, s, l);
-        var d = 5 + 20 * (0.5 - Math.random());
-        for (var i = 0; i < 3; i++) {
-            colors[index + (3 * i)] = color.r;
-            colors[index + (3 * i) + 1] = color.g;
-            colors[index + (3 * i) + 2] = color.b;
-            displacement[index + (3 * i)] = d;
-            displacement[index + (3 * i) + 1] = d;
-            displacement[index + (3 * i) + 2] = d;
-        }
-    }
-    bufferGeometry.addAttribute('customColor', new THREE.BufferAttribute(colors, 3));
-    bufferGeometry.addAttribute('displacement', new THREE.BufferAttribute(displacement, 3));
-    var textMesh = new THREE.Mesh(bufferGeometry, material);
-    return textMesh;
-}*/
-
+// Activate the targets of the objects read from server
 activateTargets();
 
 // Receive messages from iframes
@@ -1378,13 +1298,8 @@ window.addEventListener("message", function (e) {
         executeAction(msg.action, msg.value);
     }
   });
-/*
-var deleteFlag = false;
-*/
-// create a bit of animated 3D text that says "argon.js" to display 
-var uniforms = {
-    amplitude: { type: "f", value: 0.0 }
-};
+
+
 /*
 // Create the CSS3Object in the scene graph
 // Create the div that will contain the iframe
