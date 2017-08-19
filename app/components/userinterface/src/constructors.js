@@ -100,6 +100,7 @@ function Objects() {
 	this.links = {};
 	// Stores all IOPoints. These points are used to keep the state of an object and process its data.
 	this.nodes = {};
+	this.nodesInfo = {};
 
 	this.frames = {};
 	// The arrangement of nodes for crafting.

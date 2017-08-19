@@ -706,11 +706,13 @@ function makeConnectionOnServer(objectA, objectB, nodeA, nodeB){
 // Position interface in Three.js: HTML content (could be a div, iframe)
 function positionInterfaceIn3D(interface, x, y, scale) {
     var augmentedInterface = new THREE.CSS3DObject(interface);
+    augmentedInterface.scale.set(scale, scale, scale ); // 0.0005
+    // For viewing the interfaces in the browser which doesnt support vuforia
     augmentedInterface.position.z = -0.5;
     augmentedInterface.position.x = x; // 0
     augmentedInterface.position.y = y; // 0        
     userLocation.add(augmentedInterface);
-    augmentedInterface.scale.set(scale, scale, scale ); // 0.0005
+
     return augmentedInterface;
 }
 
@@ -748,7 +750,7 @@ function generateUI(interfaceName, x, y, id){
 
     div.appendChild(iframe);
 
-    return positionInterfaceIn3D(div, x, y, 0.0008);
+    return positionInterfaceIn3D(div, x, y, 0.0006);
 }
 
 // Generate object
@@ -797,6 +799,7 @@ function mapObjects(json){
             // Set the node depending on the type
             
             // Convert to Node 
+            object1.nodesInfo[key] = new Node();
             object1.nodes[key] = new Node();
             var node = object1.nodes[key];
             node.x = obj.x;
@@ -807,13 +810,15 @@ function mapObjects(json){
             } else if (obj.type == "Receptor"){
                 node.src = "receptor";
             }
+            //console.log( object1.nodes[key]);
             // Generate interface for node
             var nodeID = object1.name + "-" + key;
             var container = drawMarker(node.x, node.y, nodeID, node.src, obj.element, obj.name );
             container.className = 'interactive';
+            object1.nodesInfo[key] = node;
             object1.nodes[key] = container;
-            object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0006);
-
+            object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0003);
+            console.log( object1.nodes[key]);
             /////// Action //////
             for (var key in obj.actions){
                 var action = obj.actions[key];
@@ -822,6 +827,7 @@ function mapObjects(json){
                     // Create interface for action
                     // object1.interfaces[key] = generateUI(action.src +'/index.html', node.x, node.y);
                     object1.interfaces[key] = generateUI(action.src +'/index.html', action.x, action.y, action.code);
+                    console.log( object1.interfaces[key]);
                 }
             }
         }
@@ -959,13 +965,11 @@ function loadDataset(api, datasetPath, trackable, object){
             // create a THREE object to represent the trackable
             var object3D = new THREE.Object3D;
             scene.add(object3D);
+            var nodesInfo = object.nodesInfo;  
             // Add the interface and nodes to the trackable
             for (var key in object.frames){
                 var node = object.frames[key];
-                var nodeInfo = object.nodes[key];   
                 object3D.add(node);
-                //node.position.z = 0; // 0
-                //nodeInfo
             }
             for (var key in object.interfaces){
                 var node = object.interfaces[key];  
@@ -979,22 +983,36 @@ function loadDataset(api, datasetPath, trackable, object){
                 var targetPose = app.context.getEntityPose(targetEntity);
                 // if the pose is known the target is visible, so set the
                 // THREE object to the location and orientation
-                
-                object3D.position.copy(targetPose.position);
-                object3D.quaternion.copy(targetPose.orientation);    
-                
+                //if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
+                    object3D.position.copy(targetPose.position);
+                    object3D.quaternion.copy(targetPose.orientation);    
+                //}
                 // when the target is first seen after not being seen, the 
                 // status is FOUND.  Here, we move the 3D text object from the
                 // world to the target .
                 // when the target is first lost after being seen, the status 
                 // is LOST.  Here, we move the 3D text object back to the world       
                 // Go through the objects nodes to be added to the target 
-                
+                //scene.add(object3D);
+                        
+                //var changedMenu = 
                 // Hide the interface 
                 for (var key in object.interfaces){
                     var node = object.interfaces[key];  
                     if (seleccionado == 1){
-                        node.visible = true;
+                        node.position.set(0, 0, 0);
+                        if (targetPose.poseStatus & (Argon.PoseStatus.FOUND & Argon.PoseStatus.KNOWN)) {
+                            //scene.add(object3D);
+                            node.visible = true;
+                            
+                        } else if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
+                            node.visible = true;
+                        } else if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
+                            node.visible = true;
+                        }else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
+                            //scene.remove(object3D);
+                            node.visible = false ;
+                        } 
                     } else if (seleccionado == 2){
                         node.visible = false;
                     }
@@ -1003,43 +1021,28 @@ function loadDataset(api, datasetPath, trackable, object){
                 for (var key in object.frames){
                     var node = object.frames[key];  
                     if (seleccionado == 1){
-                        node.visible    = false;
+                        node.visible = false;
                     } else if (seleccionado == 2){
-                        node.visible = true;
+                        node.position.set(nodesInfo[key].x, nodesInfo[key].y, 0);
+                        if (targetPose.poseStatus & (Argon.PoseStatus.FOUND & Argon.PoseStatus.KNOWN)) {
+                            //scene.add(object3D);
+                            node.visible = true;
+                            object.nodes[key].style.visibility = "visible";
+                        } else if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
+                            node.visible = true;
+                            object.nodes[key].style.visibility = "visible";
+                        } else if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
+                            node.visible = true;
+                            object.nodes[key].style.visibility = "visible";
+                        } else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
+                            //scene.remove(object3D);
+                            //node.visible = false ;
+                            object.nodes[key].style.visibility = "hidden";
+                        } 
                     } 
                 }
-                
-                /*if (seleccionado == 2){
-                    // Hide the interface 
-                    for (var key in object.interfaces){
-                        var node = object.interfaces[key];  
-                        node.visible = false;
-                    }
-                    // Show the nodes when the target is detected
-                    for (var key in object.frames){
-                        var node = object.frames[key];  
-                        if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
-                            node.visible = true;
-                        } else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
-                            //node.visible = false;
-                        }
-                    }
-                } else {
-                    // Hide the nodes 
-                    for (var key in object.frames){
-                        var node = object.frames[key];  
-                        node.visible = false;
-                    }
-                    // Show the interface when the target is detected
-                    for (var key in object.interfaces){
-                        var node = object.interfaces[key];  
-                        if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
-                            node.visible = true;
-                        } else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
-                            //node.visible = false;
-                        }
-                    }
-                }*/
+
+            
             });
         })["catch"](function (err) {
             console.log("could not load dataset: " + err.message);
@@ -1086,7 +1089,7 @@ function activateTargets(){
             
     });
 }
-function activateTargets1(){
+/*function activateTargets1(){
     app.vuforia.isAvailable().then(function (available) {
         // vuforia not available on this platform
         if (!available) {
@@ -1192,7 +1195,7 @@ function activateTargets1(){
             console.log("vuforia failed to initialize: " + err.message);
         });
     });
-}
+}*/
 
 /////////////////////////////// Start App ///////////////////////////////////
 // Setup Socketio
@@ -1218,7 +1221,7 @@ scene.add(camera);
 scene.add(userLocation);
 scene.autoUpdate = false;
 // We use the standard WebGLRenderer when we only need WebGL-based content
-var renderer = new THREE.CSS3DArgonRenderer({
+var renderer = new THREE.CSS3DArgonRenderer({  
     alpha: true,
     logarithmicDepthBuffer: true,
     antialias: Argon.suggestedWebGLContextAntialiasAttribute
@@ -1493,7 +1496,7 @@ function updateLines(){
             // Use position obtained for drawing a new line based on markers connected.
             //drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
             //drawAnimatedLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
-            drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1.5,  1.5);
+            drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
             //if (!deleteFlag){
                 // drawDotLine(globalCanvas.context, [ connect.startPoint[0], connect.endPoint[1]], [connect.endPoint[0], connect.startPoint[1]], 0, 0);
                 // console.log (realityEditor.gui.utilities.checkLineCross(connect.startPoint[0], connect.startPoint[1], connect.endPoint[0], connect.endPoint[1], connect.startPoint[0], connect.endPoint[1], connect.endPoint[0], connect.startPoint[1], globalCanvas.canvas.width, globalCanvas.canvas.height));

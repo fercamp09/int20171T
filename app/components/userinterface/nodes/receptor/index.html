@@ -97,7 +97,7 @@
 
 
 <div id="textNote" style="visibility: visible; position: absolute; overflow: hidden;top:190px;left:0px; width:220px; height:30px; text-align: center; font-size:1.6em; font-weight: bold; font-family: Helvetica, Arial, sans-serif;
-color: #ff00ff">sensor</div>
+color: #ff00ff">Foco</div>
 
 <script>
     var objects = {};
@@ -110,11 +110,12 @@ color: #ff00ff">sensor</div>
         light: document.getElementById('light'),
         button: document.getElementById('button')
     };
-
+	    
     var svg;
     svg = activate("origin", elements);
     var thisText =  document.getElementById("textNote");
-
+    //svg = activate("light", elements);
+    
     window.addEventListener("message", function (e) {
 		//console.log(e.data);
         var msg = e.data;
