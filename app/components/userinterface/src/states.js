@@ -257,3 +257,8 @@ var globalConnect = {
  var globalDelete = {
 	 startPoint: [0,0]
  };
+
+ var globalNodesCache = {
+	 emisor: [],
+	 receptor: []
+ };

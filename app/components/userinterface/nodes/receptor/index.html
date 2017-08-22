@@ -162,6 +162,7 @@ color: #ff00ff">Foco</div>
 			thisText.innerHTML = msg.nodeName;
         }
 		if (typeof msg.uiActionFeedback !== "undefined") {
+            
             if (msg.uiActionFeedback === 0)
                 this.svg.ring.setAttribute("stroke", '#ff019f');
             if (msg.uiActionFeedback === 1)
@@ -170,6 +171,10 @@ color: #ff00ff">Foco</div>
                 this.svg.ring.setAttribute("stroke", '#3af431');
             if (msg.uiActionFeedback === 3)
                 this.svg.ring.setAttribute("stroke", '#f9f90a');
+            if (msg.uiActionFeedback === 4){
+                this.svg.ring.setAttribute("stroke", '#c3c3c3');
+                this.svg.ring.setAttribute("opacity", '0.5');
+            }
         }
     }.bind(this), false);
 

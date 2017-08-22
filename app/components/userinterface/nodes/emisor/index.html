@@ -163,6 +163,7 @@ color: #ff00ff">Botón</div>
 			thisText.innerHTML = msg.nodeName;
         }
 		if (typeof msg.uiActionFeedback !== "undefined") {
+            this.svg.ring.setAttribute("opacity", '1');
             if (msg.uiActionFeedback === 0)
                 this.svg.ring.setAttribute("stroke", '#ff019f');
             if (msg.uiActionFeedback === 1)
@@ -171,6 +172,10 @@ color: #ff00ff">Botón</div>
                 this.svg.ring.setAttribute("stroke", '#3af431');
             if (msg.uiActionFeedback === 3)
                 this.svg.ring.setAttribute("stroke", '#f9f90a');
+            if (msg.uiActionFeedback === 4){
+                this.svg.ring.setAttribute("stroke", '#c3c3c3');
+                this.svg.ring.setAttribute("opacity", '0.5');
+            }
         }
     }.bind(this), false);
 

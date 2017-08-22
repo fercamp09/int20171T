@@ -4,6 +4,23 @@
 /// <reference types="stats" />
 
 globalConnect.connected = false;
+
+ function addToCache(node, type){
+    if (type == "Receptor"){
+        globalNodesCache.receptor.push(node);
+    } else {
+        globalNodesCache.emisor.push(node);
+    }
+ }
+
+function disableNode(node, type){
+    if (type == "Receptor"){
+        //node.style.visibility = "hidden";
+        node.style.pointerEvents = 'none';
+    } else {
+        node.style.visibility = "visible";
+    }
+ }
 // For clicking the markers
 function click(e){
 	 
@@ -19,16 +36,38 @@ function click(e){
 		globalConnect.startPoint[0] = rect.left + rect.width/2;
 		console.log( globalConnect.startPoint);
 		globalConnect.connected = true;
-		// Get frame window
+		
+        // Show cancel button
+        var cancelButton = document.getElementById("cancelButton");
+		cancelButton.style.visibility = "visible";
+    
+        // Get frame window
+        // Disable emisor nodes
+        for (var key in globalNodesCache.emisor){
+            //globalNodesCache.receptor[key].style.visibility = 'visible';
+            globalNodesCache.emisor[key].style.pointerEvents = 'none';
+            var msg = { uiActionFeedback: 4};
+            globalNodesCache.emisor[key].children[0].contentWindow.postMessage(msg, '*');
+        }
+
+        // Enable receptor
+        for (var key in globalNodesCache.receptor){
+            //globalNodesCache.receptor[key].style.visibility = 'visible';
+            globalNodesCache.receptor[key].style.pointerEvents = 'auto';
+            var msg = { uiActionFeedback: 1};
+            globalNodesCache.receptor[key].children[0].contentWindow.postMessage(msg, '*');
+        }
+    
+        // Get frame window
 		var frameWindow = document.getElementById('iframe-'+e.target.id).contentWindow;
 		// Send a message to the frame's window
 		var msg = { uiActionFeedback: 0};
 		frameWindow.postMessage(msg, '*');
-
-        // Show cancel button
-        var cancelButton = document.getElementById("cancelButton");
-		cancelButton.style.visibility = "visible";
+        
 	} else {
+        for (var key in globalNodesCache.receptor){
+            globalNodesCache.receptor[key].style.visibility = "visible";
+        }
         // If selected the same node, reset the state
 		if (e.target.id == globalConnect.objectA+'-'+globalConnect.nodeA){ 
 			reset();
@@ -66,7 +105,19 @@ function reset (){
     // Hide cancel button
     var cancelButton = document.getElementById("cancelButton");
 	cancelButton.style.visibility = "hidden";
-            
+    // Hide Markers
+    for (var key in globalNodesCache.emisor){
+        //globalNodesCache.receptor[key].style.visibility = "hidden";
+        var msg = { uiActionFeedback: 1};
+        globalNodesCache.emisor[key].children[0].contentWindow.postMessage(msg, '*');
+        globalNodesCache.emisor[key].style.pointerEvents = 'auto';
+    }
+
+    // Hide Markers
+    for (var key in globalNodesCache.receptor){
+        //globalNodesCache.receptor[key].style.visibility = "hidden";
+        globalNodesCache.receptor[key].style.pointerEvents = 'none';
+    }
 }    
 
 // Get the window positions of two html elements
@@ -810,15 +861,21 @@ function mapObjects(json){
             } else if (obj.type == "Receptor"){
                 node.src = "receptor";
             }
-            //console.log( object1.nodes[key]);
             // Generate interface for node
             var nodeID = object1.name + "-" + key;
             var container = drawMarker(node.x, node.y, nodeID, node.src, obj.element, obj.name );
             container.className = 'interactive';
+            // Object containing strings with info
             object1.nodesInfo[key] = node;
+            // HTML content
             object1.nodes[key] = container;
+            // Content in 3D
             object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0003);
-            console.log( object1.nodes[key]);
+            // Add nodes to the appropiate cache so we can hide and unhide all at the same time
+            addToCache(object1.nodes[key], obj.type);
+            disableNode(object1.nodes[key], obj.type);
+            
+            //console.log( object1.nodes[key]);
             /////// Action //////
             for (var key in obj.actions){
                 var action = obj.actions[key];
@@ -1003,8 +1060,7 @@ function loadDataset(api, datasetPath, trackable, object){
                         node.position.set(0, 0, 0);
                         if (targetPose.poseStatus & (Argon.PoseStatus.FOUND & Argon.PoseStatus.KNOWN)) {
                             //scene.add(object3D);
-                            node.visible = true;
-                            
+                            node.visible = true;    
                         } else if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
                             node.visible = true;
                         } else if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
@@ -1454,8 +1510,8 @@ function updateLines(){
     }
     // Correct time
     timeSynchronizer(timeCorrection);
-
-    // When a marker is clicked, globalConnect.click is set to true
+    
+    // When a marker is clicked, globalConnect.click is set to false
     // When the second marker is clicked, globalConnect.connected is set to true
     if (globalConnect.click){
         // globalConnect.objectA contain the name of the object of the first click, 
@@ -1476,9 +1532,9 @@ function updateLines(){
             globalConnect.endPoint[0] = rect.left + rect.width/2;
         }*/
         drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
-           
+        // Hide receptor nodes
     }
-    
+       
     // Update the connection lines found in every object
     for (var key in objects) {
         var links = objects[key].links;
