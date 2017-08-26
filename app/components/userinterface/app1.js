@@ -1554,9 +1554,7 @@ function updateLines(){
             //drawAnimatedLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
             drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
             //if (!deleteFlag){
-                // drawDotLine(globalCanvas.context, [ connect.startPoint[0], connect.endPoint[1]], [connect.endPoint[0], connect.startPoint[1]], 0, 0);
-                // console.log (realityEditor.gui.utilities.checkLineCross(connect.startPoint[0], connect.startPoint[1], connect.endPoint[0], connect.endPoint[1], connect.startPoint[0], connect.endPoint[1], connect.endPoint[0], connect.startPoint[1], globalCanvas.canvas.width, globalCanvas.canvas.height));
-                // deleteFlag = true;
+                       
             //}
         }   
     }
