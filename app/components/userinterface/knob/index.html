@@ -66,8 +66,9 @@ input[type=checkbox]:checked + label {
   height: 100%;
   text-align: center;
   width: 100%;
-  top: 140px;
+  top: 30px;
 }
+
 
 .p2 path {
   stroke: none;
@@ -88,6 +89,10 @@ input[type=checkbox]:checked + label {
   stroke: #07E3FF;
   fill: none;
   stroke-width: 2;
+}
+
+input[type=checkbox] + label {
+  visibility: hidden;
 }
 
 </style>
@@ -215,6 +220,11 @@ setInterval(function() {
   if (sliderPrevValue !== sliderValue )  {
     if (touchState) {
       //ho.write("brightness", sliderValue);
+      var msg = {
+        action: sliderAction,
+        value: sliderValue 
+      };
+      window.parent.postMessage(msg, '*');
     }
     sliderPrevValue = sliderValue;
     knobValueText.innerHTML = Math.round(sliderValue * 100);
@@ -240,6 +250,7 @@ setInterval(function() {
 	    var msg = e.data;
       if (typeof msg.nodeName !== "undefined") {
         checkBoxAction = msg.nodeName;
+        sliderAction = msg.nodeName;
       }
   });
   </script>

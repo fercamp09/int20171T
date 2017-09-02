@@ -18,7 +18,8 @@ function disableNode(node, type){
         //node.style.visibility = "hidden";
         node.style.pointerEvents = 'none';
     } else {
-        node.style.visibility = "visible";
+        node.style.pointerEvents = 'auto';
+        //node.style.visibility = "visible";
     }
  }
 // For clicking the markers
@@ -116,7 +117,9 @@ function reset (){
     // Hide Markers
     for (var key in globalNodesCache.receptor){
         //globalNodesCache.receptor[key].style.visibility = "hidden";
+        var msg = { uiActionFeedback: 4};
         globalNodesCache.receptor[key].style.pointerEvents = 'none';
+        globalNodesCache.receptor[key].children[0].contentWindow.postMessage(msg, '*');
     }
 }    
 
@@ -197,7 +200,7 @@ function touchEnd (e) {
 }
 
 // Used for creating a marker 
-function drawMarker(x, y, id, src, type, name) {
+function drawMarker(x, y, id, src, element, type, name) {
     // Create a div for positioning a div and an iframe
     var container0 = document.createElement('div');
     container0.style.height = "250px";
@@ -239,7 +242,7 @@ function drawMarker(x, y, id, src, type, name) {
 		var frameWindow = iframe.contentWindow;
 		
 		// Send a message to the frame's window
-		var msg = {nodeName: name, type: type};
+		var msg = {nodeName: name, type: type, element: element};
 		frameWindow.postMessage(msg, '*');
     };
     
@@ -863,14 +866,14 @@ function mapObjects(json){
             }
             // Generate interface for node
             var nodeID = object1.name + "-" + key;
-            var container = drawMarker(node.x, node.y, nodeID, node.src, obj.element, obj.name );
+            var container = drawMarker(node.x, node.y, nodeID, node.src, obj.element, obj.type, obj.name );
             container.className = 'interactive';
             // Object containing strings with info
             object1.nodesInfo[key] = node;
             // HTML content
             object1.nodes[key] = container;
             // Content in 3D
-            object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0003);
+            object1.frames[key] = positionInterfaceIn3D(container, node.x, node.y, 0.0002);
             // Add nodes to the appropiate cache so we can hide and unhide all at the same time
             addToCache(object1.nodes[key], obj.type);
             disableNode(object1.nodes[key], obj.type);
@@ -1503,7 +1506,7 @@ function updateLines(){
         globalCanvas.context.beginPath();
         //globalCanvas.context.fillStyle = ;
         globalCanvas.context.lineWidth="15 ";
-        globalCanvas.context.strokeStyle="rgba("+ [255,0,0,0.5]+")";
+        globalCanvas.context.strokeStyle="rgba("+ [255,1,159,0.5]+")";
         globalCanvas.context.rect(0, 0, globalStates.width, globalStates.height);
         //globalCanvas.context.fill();
         globalCanvas.context.stroke();

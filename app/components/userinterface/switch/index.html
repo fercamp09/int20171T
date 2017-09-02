@@ -67,13 +67,14 @@ input[type=checkbox]:checked + label {
   text-align: center;
   width: 100%;
   top: 140px;
+  visibility: hidden;
 }
 
 .p2 path {
   stroke: none;
   fill: #07E3FF;
   stroke-weight: .1;
-
+  visibility: hidden;
 }
 
 .p2 path:first-child {
@@ -82,6 +83,7 @@ input[type=checkbox]:checked + label {
 
 .p2 rect, .p2 polygon {
   fill: #07E3FF;
+  visibility: hidden;
 }
 
 .p2 circle {
@@ -89,7 +91,10 @@ input[type=checkbox]:checked + label {
   fill: none;
   stroke-width: 2;
 }
-
+/*
+#knob-container {
+  
+}*/
 </style>
 
 </head>
@@ -99,9 +104,10 @@ input[type=checkbox]:checked + label {
   <label for="checkbox"> </label>
   
   <!-- Slider -->
-  <!--<div id="knob-container" class="">
-  <input id="futureKnob" type="range" min="0" max="360" data-width="200" data-height="200"   data-angleRange="360" value="20">
-  </div>-->
+  <div id="knob-container" class="">
+      <p id="knob-value" style="height: 50px;">50</p>
+      <input id="futureKnob" type="range" min="0" max="360"    data-width="200" data-height="200"   data-angleRange="360" value="20">
+  </div>
 
 <script>
 
@@ -118,7 +124,7 @@ Ui.P2.prototype.createElement = function() {
     this.addComponent(new Ui.Arc({
         type: 'Arc',
         size: 40,
-        outerRadius: this.width / 2.2,
+        outerRadius: this.width / 2.2, 
         innerRadius: this.width / 1.8 - this.width / 6
     }));
 
@@ -132,7 +138,7 @@ this.addComponent(new Ui.Pointer({
 
 /*
       this.addComponent(new Ui.Scale({
-          drawScale: true,
+          drawScale: true,      
           drawDial: false,
           steps: 30,
           tickWidth: 10,
@@ -154,7 +160,7 @@ this.addComponent(new Ui.Pointer({
 };
 
 var futureKnob = document.getElementById('futureKnob');
-
+      
 var knormal = new Knob(futureKnob, new Ui.P2());
 
 var touchState = false;
@@ -214,6 +220,11 @@ setInterval(function() {
   if (sliderPrevValue !== sliderValue )  {
     if (touchState) {
       //ho.write("brightness", sliderValue);
+      var msg = {
+        action: sliderAction,
+        value: sliderValue 
+      };
+      window.parent.postMessage(msg, '*');
     }
     sliderPrevValue = sliderValue;
     knobValueText.innerHTML = Math.round(sliderValue * 100);
@@ -239,6 +250,7 @@ setInterval(function() {
 	    var msg = e.data;
       if (typeof msg.nodeName !== "undefined") {
         checkBoxAction = msg.nodeName;
+        sliderAction = msg.nodeName;
       }
   });
   </script>

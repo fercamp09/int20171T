@@ -156,11 +156,20 @@ color: #ffffff">Botón</div>
 			//  thisText.innerHTML = objects[msg.object].nodes[msg.node].name;
 
         }*/
-        if (typeof msg.type !== "undefined") {
-			this.svg = activate(msg.type, elements);
+        if (typeof msg.element !== "undefined") {
+			this.svg = activate(msg.element, elements);
         }
 		if (typeof msg.nodeName !== "undefined") {
 			thisText.innerHTML = msg.nodeName;
+        }
+        if (typeof msg.type !== "undefined") {
+            if (msg.type == "Receptor"){
+                this.svg.ring.setAttribute("stroke", '#c3c3c3');
+                this.svg.ring.setAttribute("opacity", '0.5');
+            }else{
+                this.svg.ring.setAttribute("stroke", '#00ffff');
+                this.svg.ring.setAttribute("opacity", '1');
+            }    
         }
 		if (typeof msg.uiActionFeedback !== "undefined") {
             this.svg.ring.setAttribute("opacity", '1');
