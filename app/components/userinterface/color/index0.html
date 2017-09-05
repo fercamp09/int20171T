@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <title></title>
     <link href='http://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="themes.css" />
-     <script type="text/javascript" src="colorpicker.min.js"></script>
+    <script src="jscolor.js"></script>
 <style type="text/css">
 * {
   -webkit-user-select:none !important;
@@ -13,20 +12,56 @@
 }
 body {
   height: 300px;
-  width: 30px;
+  width: 300px;
 }
 
-#slider {
+input[type=checkbox] {
+  height: 100px;
+  width: 100px;
   position: absolute;
-  top: 10px;
-  width: 30px;
+  top: 50px;
+  left: 50px;
+  opacity: 0;
+  cursor: pointer;
+  display: none;
 }
+
+label {
+  cursor: pointer;
+}
+
+input[type=checkbox] + label {
+  background: transparent url("icon_off.svg") no-repeat;
+  background-size:80% 100%;
+  height: 100px;
+  width: 100px;
+  display:block;
+  padding: 0;
+    position: absolute;
+  top: 40px;
+  left: 60px;
+  z-index: 5000;
+}
+
+input[type=checkbox]:checked + label {
+  background:transparent url("icon_on.svg") no-repeat;
+  background-size:80% 100%;
+}
+
+* {
+  font-family: 'Titillium Web', sans-serif;
+}
+
+/*
+#knob-container {
+  
+}*/
 </style>
 
 </head>
-<body style="width: 30px; height: 200px;">
-  <div id="picker" style="visibility: hidden;"></div>
-  <div id="slider" style="position: float;" ></div>
+<body style="width: 200px; height: 200px;">
+  <input id="colorSelect" value="ffcc00">
+
 <script>
 
 /*function doClick() {
@@ -34,26 +69,19 @@ body {
 }*/
 
 /////////// HybridObjects //////////
-
 // red
-var redAction= "changeColorR1";
+var redAction= "";
 var redValue = 1;
 var redPrevValue = 1;
 // green
-var greenAction = "changeColorG1";  
 var greenValue = 1;
 var greenPrevValue = 1;
 // blue
-var blueAction = "changeColorB1";
 var blueValue = 1;
 var bluePrevValue = 1;
 
-ColorPicker(document.getElementById('slider'), document.getElementById('picker'),
-            function(hex, hsv, rgb) {
-                redValue = rgb.r/255;
-                greenValue = rgb.g/255;
-                blueValue = rgb.b/255;         // [0-255], [0-255], [0-255]
-            });
+var input = document.getElementById('colorSelect');
+var picker = new jscolor(input);
 
 /*var ho = new HybridObject();
 
@@ -62,13 +90,13 @@ ho.addReadListener('brightness', function(value) {
 });*/
 
 setInterval(function() {
-      //redValue = picker.rgb[0]/255;
-      //greenValue = picker.rgb[1]/255;
-      //blueValue = picker.rgb[2]/255;
+      redValue = picker.rgb[0]/255;
+      greenValue = picker.rgb[1]/255;
+      blueValue = picker.rgb[2]/255;
       
       redPrevValue = sendValue(redValue, redPrevValue, redAction);
-      greenPrevValue = sendValue(greenValue, greenPrevValue, greenAction);
-      bluePrevValue = sendValue(blueValue, bluePrevValue, blueAction);
+      //sendValue(greenValue, greenPrevValue);
+      //sendValue(blueValue, bluePrevValue);
   }, 50);
 
 function sendValue(value, prevValue, action){
@@ -84,7 +112,7 @@ function sendValue(value, prevValue, action){
   window.addEventListener("message", function (e) {
 	    var msg = e.data;
       if (typeof msg.nodeName !== "undefined") {
-        //redAction = msg.nodeName;
+        redAction = msg.nodeName;
         //blueAction = msg.nodeName;
         //greenAction = msg.nodeName;
       }

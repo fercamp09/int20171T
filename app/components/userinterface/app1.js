@@ -66,9 +66,9 @@ function click(e){
 		frameWindow.postMessage(msg, '*');
         
 	} else {
-        for (var key in globalNodesCache.receptor){
+        /*for (var key in globalNodesCache.receptor){
             globalNodesCache.receptor[key].style.visibility = "visible";
-        }
+        }*/
         // If selected the same node, reset the state
 		if (e.target.id == globalConnect.objectA+'-'+globalConnect.nodeA){ 
 			reset();
@@ -106,7 +106,7 @@ function reset (){
     // Hide cancel button
     var cancelButton = document.getElementById("cancelButton");
 	cancelButton.style.visibility = "hidden";
-    // Hide Markers
+    // Enable Emisor Markers
     for (var key in globalNodesCache.emisor){
         //globalNodesCache.receptor[key].style.visibility = "hidden";
         var msg = { uiActionFeedback: 1};
@@ -114,7 +114,7 @@ function reset (){
         globalNodesCache.emisor[key].style.pointerEvents = 'auto';
     }
 
-    // Hide Markers
+    // Disable Receptor Markers
     for (var key in globalNodesCache.receptor){
         //globalNodesCache.receptor[key].style.visibility = "hidden";
         var msg = { uiActionFeedback: 4};
@@ -167,6 +167,9 @@ function touchStart (e) {
     //globalConnect.connected = true;
 }*/
     
+
+
+
 // Function used in the event listener of "mousemove", for 
 // getting the point of the mouse. 
 // That info is later used in the update for drawing a line 
@@ -707,6 +710,7 @@ function executeAction(actionCode, value) {
            console.log('Acción modificada');
         }
     });
+    
 }
 
 
@@ -1063,17 +1067,22 @@ function loadDataset(api, datasetPath, trackable, object){
                         node.position.set(0, 0, 0);
                         if (targetPose.poseStatus & (Argon.PoseStatus.FOUND & Argon.PoseStatus.KNOWN)) {
                             //scene.add(object3D);
-                            node.visible = true;    
+                            node.visible = true;
+                            object.visible = true;    
                         } else if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
                             node.visible = true;
+                            object.visible = true;
                         } else if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
                             node.visible = true;
+                            object.visible = true;
                         }else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
                             //scene.remove(object3D);
                             node.visible = false ;
+                            object.visible = false;
                         } 
                     } else if (seleccionado == 2){
                         node.visible = false;
+                        object.visible = false;
                     }
                 }
                 // Show the nodes when the target is detected
@@ -1081,21 +1090,26 @@ function loadDataset(api, datasetPath, trackable, object){
                     var node = object.frames[key];  
                     if (seleccionado == 1){
                         node.visible = false;
+                        object.visible = false;
                     } else if (seleccionado == 2){
                         node.position.set(nodesInfo[key].x, nodesInfo[key].y, 0);
                         if (targetPose.poseStatus & (Argon.PoseStatus.FOUND & Argon.PoseStatus.KNOWN)) {
                             //scene.add(object3D);
                             node.visible = true;
                             object.nodes[key].style.visibility = "visible";
+                            object.visible = true;
                         } else if (targetPose.poseStatus & Argon.PoseStatus.KNOWN) {
                             node.visible = true;
+                            object.visible = true;
                             object.nodes[key].style.visibility = "visible";
                         } else if (targetPose.poseStatus & Argon.PoseStatus.FOUND) {
                             node.visible = true;
+                            object.visible = true;
                             object.nodes[key].style.visibility = "visible";
                         } else if (targetPose.poseStatus & Argon.PoseStatus.LOST) {
                             //scene.remove(object3D);
                             //node.visible = false ;
+                            object.visible = false;
                             object.nodes[key].style.visibility = "hidden";
                         } 
                     } 
@@ -1268,9 +1282,47 @@ socket.on('object', function(socket){
   });
 });
 socket.emit('object', 1);*/ 
-
 // set up Argon
 var app = Argon.init();
+// Setup MQTT
+ //Using the HiveMQ public Broker, with a random client Id
+ /*var client = new Messaging.Client("200.126.23.138", 1883, "james");
+
+ //Gets  called if the websocket/mqtt connection gets disconnected for any reason
+ client.onConnectionLost = function (responseObject) {
+     //Depending on your scenario you could implement a reconnect logic here
+     alert("connection lost: " + responseObject.errorMessage);
+ };
+
+ //Gets called whenever you receive a message for your subscriptions
+ client.onMessageArrived = function (message) {
+     //Do something with the push message you received
+     $('#messages').append('<span>Topic: ' + message.destinationName + '  | ' + message.payloadString + '</span><br/>');
+ };
+
+ //Connect Options
+ var options = {
+     timeout: 3,
+     //Gets Called if the connection has sucessfully been established
+     onSuccess: function () {
+         alert("Connected");
+     },
+     //Gets Called if the connection could not be established
+     onFailure: function (message) {
+         alert("Connection failed: " + message.errorMessage);
+     }
+ };
+
+client.connect(options);
+
+ //Creates a new Messaging.Message Object and sends it to the HiveMQ MQTT Broker
+ var publish = function (payload, topic, qos) {
+     //Send your message (also possible to serialize it as JSON or protobuf or just use a string, no limitations)
+     var message = new Messaging.Message(payload);
+     message.destinationName = topic;
+     message.qos = qos;
+     client.send(message);
+ }*/
 // set up THREE.  Create a scene, a perspective camera and an object
 // for the user's location
 var scene = new THREE.Scene();
@@ -1542,26 +1594,48 @@ function updateLines(){
     for (var key in objects) {
         var links = objects[key].links;
         for (var keylink in links){
-            var link = links[keylink];
-            // Get nodes from objects object
-            var nodeA = objects[link.objectA].nodes[link.nodeA];
-            var nodeB = objects[link.objectB].nodes[link.nodeB];
-            // Obtain the actual position points of the markers 
-            var connect = getPointsFromNodes(nodeA, nodeB);
-            
-            if (isNaN(link.ballAnimationCount))
-			    link.ballAnimationCount = 0;
-            
-            // Use position obtained for drawing a new line based on markers connected.
-            //drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
-            //drawAnimatedLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
-            drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
-            //if (!deleteFlag){
-                       
-            //}
+                var link = links[keylink];
+                // Get nodes from objects object
+                var nodeA = objects[link.objectA].nodes[link.nodeA];
+                var nodeB = objects[link.objectB].nodes[link.nodeB];
+                // Obtain the actual position points of the markers 
+                var connect = getPointsFromNodes(nodeA, nodeB);
+                if (isNaN(link.ballAnimationCount))
+                    link.ballAnimationCount = 0;
+                
+                // Use position obtained for drawing a new line based on markers connected.
+                //drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
+                //drawAnimatedLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
+                if (objects[link.objectB].visible || objects[link.objectB].visible){
+                    drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
+                } else if (!objects[link.objectA].visible && isLineWithinScreen(connect.startPoint, connect.endPoint)){
+                    drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
+                } else if (!objects[link.objectB].visible && isLineWithinScreen(connect.startPoint, connect.endPoint)){
+                    drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
+                } 
+                
         }   
     }
 }
+
+
+function isLineWithinScreen(startPoint, endPoint) {
+    var screenCorners = [
+        [0,0],
+        [globalStates.width,0],
+        [globalStates.width,globalStates.height],
+        [0,globalStates.height], 
+    ];
+    var isInsideScreen = //this.insidePoly([thisNode.screenX, thisNode.screenY], screenCorners, true);
+    realityEditor.gui.utilities.myCheckLineCross(startPoint[0], startPoint[1], endPoint[0], endPoint[1], screenCorners[0][0], screenCorners[0][1], screenCorners[1][0], screenCorners[1][1], globalCanvas.canvas.width, globalCanvas.canvas.height)
+    || realityEditor.gui.utilities.myCheckLineCross(startPoint[0], startPoint[1], endPoint[0], endPoint[1], screenCorners[1][0], screenCorners[1][1], screenCorners[2][0], screenCorners[2][1], globalCanvas.canvas.width, globalCanvas.canvas.height)
+    || realityEditor.gui.utilities.myCheckLineCross(startPoint[0], startPoint[1], endPoint[0], endPoint[1], screenCorners[2][0], screenCorners[2][1], screenCorners[3][0], screenCorners[3][1], globalCanvas.canvas.width, globalCanvas.canvas.height)
+    || realityEditor.gui.utilities.myCheckLineCross(startPoint[0], startPoint[1], endPoint[0], endPoint[1], screenCorners[3][0], screenCorners[3][1], screenCorners[0][0], screenCorners[0][1], globalCanvas.canvas.width, globalCanvas.canvas.height);
+    
+    // line intersects with left, right, up, down
+    //console.log(thisNode.name, [thisNode.screenX, thisNode.screenY], isInsideScreen);
+    return isInsideScreen;
+};
 // the updateEvent is called each time the 3D world should be
 // rendered, before the renderEvent.  The state of your application
 // should be updated here.

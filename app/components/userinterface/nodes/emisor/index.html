@@ -172,9 +172,10 @@ color: #ffffff">Botón</div>
             }    
         }
 		if (typeof msg.uiActionFeedback !== "undefined") {
-            this.svg.ring.setAttribute("opacity", '1');
+            this.svg.ring.setAttribute("fill-opacity", 0.4);
+            //this.svg.ring.setAttribute("opacity", '1');
             if (msg.uiActionFeedback === 0)
-                this.svg.ring.setAttribute("stroke", '#ff019f');
+                this.svg.ring.setAttribute("stroke", '#ff019f');  
             if (msg.uiActionFeedback === 1)
                 this.svg.ring.setAttribute("stroke", '#00ffff');
             if (msg.uiActionFeedback === 2)

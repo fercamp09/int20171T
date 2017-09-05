@@ -81,6 +81,22 @@ realityEditor.gui.utilities.checkLineCross = function (x11, y11, x12, y12, x21, 
 	&& this.checkBetween(x21, x22, interX) && this.checkBetween(y21, y22, interY));
 };
 
+realityEditor.gui.utilities.myCheckLineCross = function(x11, y11, x12, y12, x21, y21, x22, y22, w, h) {
+	var l1 = this.lineEq(x11, y11, x12, y12),
+		l2 = this.lineEq(x21, y21, x22, y22);
+
+	var interX = this.calculateX(l1, l2); //calculate the intersection X value
+	var interY = this.calculateY(l1, interX);
+	// cout("interX, interY",interX, interY);
+
+	if (!interY || !interX) {
+		return false;
+	}
+	//  cout("point on line --- checking on segment now");
+	return (this.checkBetween(x11, x12, interX) && this.checkBetween(y11, y12, interY)
+	&& this.checkBetween(x21, x22, interX) && this.checkBetween(y21, y22, interY));
+};
+
 /**********************************************************************************************************************
  **********************************************************************************************************************/
 

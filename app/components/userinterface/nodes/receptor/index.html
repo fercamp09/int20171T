@@ -171,7 +171,8 @@ color: #ffffff">Foco</div>
             }
         }    
 		if (typeof msg.uiActionFeedback !== "undefined") {
-            this.svg.ring.setAttribute("opacity", '1');
+            //this.svg.ring.setAttribute("opacity", '1');
+            this.svg.ring.setAttribute("fill-opacity", 0.4);
             if (msg.uiActionFeedback === 0)
                 this.svg.ring.setAttribute("stroke", '#ff019f');
             if (msg.uiActionFeedback === 1)
