@@ -16,7 +16,7 @@ globalConnect.connected = false;
 function disableNode(node, type){
     if (type == "Receptor"){
         //node.style.visibility = "hidden";
-        node.style.pointerEvents = 'none';
+        node.style.pointerEvents = 'auto';//none
     } else {
         node.style.pointerEvents = 'auto';
         //node.style.visibility = "visible";
@@ -46,8 +46,8 @@ function click(e){
         // Disable emisor nodes
         for (var key in globalNodesCache.emisor){
             //globalNodesCache.receptor[key].style.visibility = 'visible';
-            globalNodesCache.emisor[key].style.pointerEvents = 'none';
-            var msg = { uiActionFeedback: 4};
+            globalNodesCache.emisor[key].style.pointerEvents = 'auto'; // none
+            var msg = { uiActionFeedback: 1}; // 4
             globalNodesCache.emisor[key].children[0].contentWindow.postMessage(msg, '*');
         }
 
@@ -109,16 +109,16 @@ function reset (){
     // Enable Emisor Markers
     for (var key in globalNodesCache.emisor){
         //globalNodesCache.receptor[key].style.visibility = "hidden";
-        var msg = { uiActionFeedback: 1};
+        var msg = { uiActionFeedback: 1}; 
         globalNodesCache.emisor[key].children[0].contentWindow.postMessage(msg, '*');
         globalNodesCache.emisor[key].style.pointerEvents = 'auto';
-    }
+    }   
 
     // Disable Receptor Markers
     for (var key in globalNodesCache.receptor){
         //globalNodesCache.receptor[key].style.visibility = "hidden";
-        var msg = { uiActionFeedback: 4};
-        globalNodesCache.receptor[key].style.pointerEvents = 'none';
+        var msg = { uiActionFeedback: 1}; //4
+        globalNodesCache.receptor[key].style.pointerEvents = 'auto'; //none
         globalNodesCache.receptor[key].children[0].contentWindow.postMessage(msg, '*');
     }
 }    
@@ -142,33 +142,66 @@ function getPointsFromNodes(nodeA, nodeB){
 function touchStart (e) {
     // Set to true when the first marker is touched
     globalConnect.click = true;
-   
-    // globalConnect.connected = false;
-    // globalConnect.nodeA = e.target;
+    	// Identify the object and the node.
+		var id = e.target.id.split("-");
+		globalConnect.objectA = id[0];
+		globalConnect.nodeA = id[1];
+		// Obtain the points of the click
+		var rect = e.target.getBoundingClientRect();
+		globalConnect.startPoint[1] = rect.top + rect.height/2;
+		globalConnect.startPoint[0] = rect.left + rect.width/2;
+		
+        // Show cancel button
+        var cancelButton = document.getElementById("cancelButton");
+		cancelButton.style.visibility = "visible";
     
-    // Identify the object and the node just clicked. 
-    // NodeID: "objectA-nodeA"
-    var id = e.target.id.split("-");
-    globalConnect.objectA = id[0];
-    globalConnect.nodeA = id[1];
+        // Get frame window
+        // Disable emisor nodes
+        for (var key in globalNodesCache.emisor){
+            //globalNodesCache.receptor[key].style.visibility = 'visible';
+            globalNodesCache.emisor[key].style.pointerEvents = 'auto'; // none
+            var msg = { uiActionFeedback: 1}; // 4
+            globalNodesCache.emisor[key].children[0].contentWindow.postMessage(msg, '*');
+        }
+
+        // Enable receptor
+        for (var key in globalNodesCache.receptor){
+            //globalNodesCache.receptor[key].style.visibility = 'visible';
+            globalNodesCache.receptor[key].style.pointerEvents = 'auto';
+            var msg = { uiActionFeedback: 1};
+            globalNodesCache.receptor[key].children[0].contentWindow.postMessage(msg, '*');
+        }
     
-    // Obtain the points of the marker which was clicked
-    var rect = e.target.getBoundingClientRect();
-    globalConnect.startPoint[1] = rect.top + rect.height/2;
-    globalConnect.startPoint[0] = rect.left + rect.width/2;    
+        // Get frame window
+		var frameWindow = document.getElementById('iframe-'+e.target.id).contentWindow;
+		// Send a message to the frame's window
+		var msg = { uiActionFeedback: 0};
+		frameWindow.postMessage(msg, '*');
+            
 }
-
-// For resetting the state after connecting a line
-/*function reset (){
-    // Reset the globalConnect variables used when connecting
-    globalConnect.nodeA = "";
-    globalConnect.nodeB = "";    
-    globalConnect.click = false;
-    //globalConnect.connected = true;
-}*/
-    
-
-
+// Used for the event listener of "touchend" on the markers overlay
+function touchEnd (e) {
+    console.log("hi");
+    // If selected the same node, reset the state
+		if (e.target.id == globalConnect.objectA+'-'+globalConnect.nodeA){ 
+            console.log("reset");
+            reset();
+			return;
+		}
+		// Identify the object and the node.
+		var id = e.target.id.split("-");
+		globalConnect.objectB = id[0];
+		globalConnect.nodeB = id[1];
+			
+		// Obtain the points of the click
+		var rect = e.target.getBoundingClientRect();
+		globalConnect.endPoint[1] = rect.top + rect.height/2;
+		globalConnect.endPoint[0] = rect.left + rect.width/2;
+		// Draw the connection
+		// drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
+		makeConnectionOnServer(globalConnect.objectA, globalConnect.objectB, globalConnect.nodeA, globalConnect.nodeB );
+        reset();
+}
 
 // Function used in the event listener of "mousemove", for 
 // getting the point of the mouse. 
@@ -176,30 +209,6 @@ function touchStart (e) {
 function mantainLine(event){
     globalConnect.endPoint[0] = event.clientX;
     globalConnect.endPoint[1] = event.clientY;
-}
-
-// Used for the event listener of "touchend" on the markers overlay
-function touchEnd (e) {
-    globalConnect.click = false;
-    // globalConnect.connected = true;
-    
-    // Identify the object and the node just clicked.
-    // NodeID: "objectB-nodeB"
-    var id = e.target.id.split("-");
-    globalConnect.objectB = id[0];
-    globalConnect.nodeB = id[1];
-        
-    // Obtain the points of the node clicked.
-    var rect = e.target.getBoundingClientRect();
-    globalConnect.endPoint[1] = rect.top + rect.height/2;
-    globalConnect.endPoint[0] = rect.left + rect.width/2;
-
-    // Draw the line
-    // drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
-    
-    // Make the connection
-    makeConnectionOnServer(globalConnect.objectA, globalConnect.objectB, globalConnect.nodeA,globalConnect.nodeB );
-    reset();
 }
 
 // Used for creating a marker 
@@ -235,11 +244,15 @@ function drawMarker(x, y, id, src, element, type, name) {
     iframe.id = "iframe-" + id;
 
     // Set the event listeners
-    //overlay.addEventListener("pointerdown", touchStart);
-    //overlay.addEventListener("pointerup", touchEnd);
+    // Uncomment for click and drag
+    /*overlay.addEventListener("pointerdown", touchStart);
+    overlay.addEventListener("pointerup", touchEnd);
+    */    
+    //overlay.addEventListener("pointermove", mantainLine);
+    // Uncomment for click and click
     overlay.addEventListener("pointerup", click);
     // For showing the line while moving over a marker
-    container0.addEventListener("pointermove", mantainLine);
+    //container0.addEventListener("pointermove", mantainLine);
     iframe.onload = function(){
 		// Get frame window
 		var frameWindow = iframe.contentWindow;
@@ -1162,113 +1175,6 @@ function activateTargets(){
             
     });
 }
-/*function activateTargets1(){
-    app.vuforia.isAvailable().then(function (available) {
-        // vuforia not available on this platform
-        if (!available) {
-            console.warn("vuforia not available on this platform.");
-            return;
-        }
-        // tell argon to initialize vuforia for our app, using our license information.
-        app.vuforia.init({
-            encryptedLicenseData: "-----BEGIN PGP MESSAGE-----\nVersion: OpenPGP.js v2.3.2\nComment: http://openpgpjs.org\n\n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\nCDjUbY1FxwlVJ4UZ7lz+8jWHO5jYY99adPoATpUaWYxm9oPxz/QR4kvgvLjl\n9Ti8379Y8qihzqsRmf6YLYyggknlt9Uyl2HjA+1zcwbDnb3I6g/XjTFUPy1D\nxZqqSEuCNDLh7m1+GDA3KXQnLIqOdcxOVzyFCDtKI9c6b0D0ezNkxUjgkoIp\nmxSSLDjzmHuPLsQVwqxP4KNU1gT7mXTnhlhsG2Vll/WZD+tuzGK8h9anf6/p\n4pCk61Dhj1hmb9msTaK4FGhmBMtJ6kQ4SzGOfFKG5IElAHidYgd0iz7AqEzX\nGttDkcHGM9iPIYUBY2r/538M/kxeVx5fBiWEkmWz5FMzqPRs3GZWYiAb2tnp\nWSDXW3B1mwznwcCkyUP6OP/c6FFmb6Rag/ZaItVAvVjmA7tXICLJPhYIs9hE\nI6zJSVZ81YtKg9Nb6Rx49qf18pQ1SWZNGrZrWaTJTLu4cu4c5v/czY5kyT0Y\n8RqNUlI5hwWU8G9LpJ5jv8dssrgcweTG/PEbCkzqz0R6W6VgDUyqo6WSGgoS\nB9or791lGcDazNT6CJ4/2Z1wBd4BSHkhSwfcPovGOleZFE24gLiG6puHyVjk\nWEIir2WXzhypwLkG/dn+ZJW1ezOvTb4gVVILHrWhNh8=\n=LoZg\n-----END PGP MESSAGE-----"
-        }).then(function (api) {
-            // We can load a second dataset and have both active simultaneously.
-            // Load the Vuforia Stones and Chips targets, and set the MaxSimultaneousImageTargets hint
-            // to 2 so two targets can be tracked simultaneously.
-            api.objectTracker.createDataSet("../resources/datasets/StonesAndChips.xml").then(function (dataSet) {
-                // the data set has been succesfully downloaded
-                // tell vuforia to load the dataset.  
-                dataSet.load().then(function () {
-                    // when it is loaded, we retrieve a list of trackables defined in the
-                    // dataset and set up the content for the target
-                    var trackables = dataSet.getTrackables();
-                    // tell argon we want to track a specific trackable.  Each trackable
-                    // has a Cesium entity associated with it, and is expressed in a 
-                    // coordinate frame relative to the camera.  Because they are Cesium
-                    // entities, we can ask for their pose in any coordinate frame we know
-                    // about.
-                    var stonesEntity = app.context.subscribeToEntityById(trackables["stones"].id);
-                    var chipsEntity = app.context.subscribeToEntityById(trackables["chips"].id);
-                    // create a THREE object to put on the trackable
-                    var stonesObject = new THREE.Object3D;
-                    var chipsObject = new THREE.Object3D;
-                    scene.add(stonesObject);
-                    scene.add(chipsObject);
-                    //stonesObject.add(stonesTextObject);
-                    //chipsObject.add(chipsTextObject);
-                        
-                    for (var key in objects["photon1"].frames){
-                            var node = objects["photon1"].frames[key];  
-                            stonesObject.add(node);
-                            node.position.z = -0.1; // 0
-                    }
-                    
-                    for (var key in objects["photon2"].frames){
-                            var node = objects["photon2"].frames[key];  
-                            chipsObject.add(node);
-                            node.position.z = -0.1; // 0
-                    }
-                     
-                    // the updateEvent is called each time the 3D world should be
-                    // rendered, before the renderEvent.  The state of your application
-                    // should be updated here.
-                    app.context.updateEvent.addEventListener(function () {
-                        // get the pose (in local coordinates) of each target
-                        var stonesPose = app.context.getEntityPose(stonesEntity);
-                        var chipsPose = app.context.getEntityPose(chipsEntity);
-                        // if the pose is known the target is visible, so set the
-                        // THREE object to the location and orientation
-                        if (stonesPose.poseStatus & Argon.PoseStatus.KNOWN) {
-                            stonesObject.position.copy(stonesPose.position);
-                            stonesObject.quaternion.copy(stonesPose.orientation);
-                        }
-                        if (chipsPose.poseStatus & Argon.PoseStatus.KNOWN) {
-                            chipsObject.position.copy(chipsPose.position);
-                            chipsObject.quaternion.copy(chipsPose.orientation);
-                        }
-                        // when the target is first seen after not being seen, the 
-                        // status is FOUND.  Here, we show the content.
-                        // when the target is first lost after being seen, the status 
-                        // is LOST.  Here, we hide the content.
-                        ;
-                        
-                        for (var key in objects["photon1"].frames){
-                            var node = objects["photon1"].frames[key];  
-                            if (chipsPose.poseStatus & Argon.PoseStatus.FOUND) {
-                                node.visible = true;
-                            }
-                            else if (chipsPose.poseStatus & Argon.PoseStatus.LOST) {
-                                node.visible = false;
-                            }
-                        }
-                        for (var key in objects["photon2"].frames){
-                            var node = objects["photon2"].frames[key]; 
-                            if (stonesPose.poseStatus & Argon.PoseStatus.FOUND) {
-                                node.visible = true;
-                            }
-                            else if (stonesPose.poseStatus & Argon.PoseStatus.LOST) {
-                                node.visible = false;
-                            }
-                        } 
-                    });
-                })["catch"](function (err) {
-                    console.log("could not load dataset: " + err.message);
-                });
-                // activate the dataset.
-                api.objectTracker.activateDataSet(dataSet);
-                // enable 2 simultaneously tracked targets
-                api.setHint(Argon.VuforiaHint.MaxSimultaneousImageTargets, 2).then(function (result) {
-                    console.log("setHint " + (result ? "succeeded" : "failed"));
-                })["catch"](function (err) {
-                    console.log("could not set hint: " + err.message);
-                });
-            });
-        })["catch"](function (err) {
-            console.log("vuforia failed to initialize: " + err.message);
-        });
-    });
-}*/
 
 /////////////////////////////// Start App ///////////////////////////////////
 // Setup Socketio
@@ -1381,18 +1287,22 @@ argonuiDiv = document.getElementById("argon");
 
 // Set the pointermove event listener for showing the line while connecting
 argonuiDiv.addEventListener("pointermove", mantainLine);
-
+/*argonuiDiv.addEventListener("pointerover", function(event){
+    mantainLine();
+    
+    console.log("pointer-over");
+});*/
 
 //////////////////////// DELETE LINES /////////////////////////////////
 // Set the events listeners for deleting the lines
-// Event triggered when selecting first connection point
-argonuiDiv.addEventListener("pointerup", function(event){
+// Event triggered when selecting first delete point
+argonuiDiv.addEventListener("pointerdown", function(event){
     globalDelete.startPoint[0] = event.clientX;
     globalDelete.startPoint[1] = event.clientY;
     //reset(); 
 });
-// Event triggered when selecting the second connection point
-argonuiDiv.addEventListener("pointerdown", function(event){
+// Event triggered when selecting the second delete point
+argonuiDiv.addEventListener("pointerup", function(event){
     deleteLines(globalDelete.startPoint[0], globalDelete.startPoint[1], event.clientX, event.clientY);
 });
     
@@ -1412,133 +1322,6 @@ window.addEventListener("message", function (e) {
         executeAction(msg.action, msg.value);
     }
   });
-
-
-/*
-// Create the CSS3Object in the scene graph
-// Create the div that will contain the iframe
-var div = document.createElement('div');
-div.className = 'interactive';
-// Create the iframe that will contain the augmented interface, settings its properties for being interactive and to look great.
-var iframe = document.createElement('iframe');
-iframe.src = 'http://200.126.23.63:1337/vuforia/knob/index.html';
-iframe.frameBorder = 0;
-iframe.setAttribute("sandbox", "allow-forms allow-pointer-lock allow-same-origin allow-scripts");
-iframe.className = 'interactive';
-iframe.style.height = "250px";
-iframe.style.width = "250px";
-div.appendChild(iframe);
-
-// Create points for joining
-var divPoints = document.createElement("div");
-divPoints.style.backgroundColor =  "lightblue";
-var container0 = drawMarker("0", "0", "node0");
-container0.className = 'interactive';
-var container1 = drawMarker("25", "25", "node1");
-container1.className = 'interactive';
-var container2 = drawMarker("10", "10", "node2");
-
-// For connecting markers
-
-var object1 = new Objects();
-var object2 = new Objects();
-object1.nodes["node0"] = container0;
-object2.nodes["node1"] = container1;
-object1.name = "object1";
-object2.name = "object2";
-objects[object1.name] = object1;   
-//objects[object2.name] = object2;   
-/*object1.links["link1"] = new Link();
-object1.links["link1"].objectA = object1.name;
-object1.links["link1"].objectB = object2.name;
-object1.links["link1"].nodeA = "node0"; 
-object1.links["link1"].nodeB = "node1";*/
-// var argonTextObject = new THREE.Object3D();
-// Augmented user interface
-/*var argonTextObject = new THREE.CSS3DObject(container0);
-argonTextObject.position.z = -0.5;
-userLocation.add(argonTextObject);
-argonTextObject.scale.set(0.001, 0.001, 0.001);
-
-var secondMarker = new THREE.CSS3DObject(container1);
-secondMarker.position.z = -0.5;
-userLocation.add(secondMarker);
-secondMarker.scale.set(0.001, 0.001, 0.001);
-
-app.vuforia.isAvailable().then(function (available) {
-    // vuforia not available on this platform
-    if (!available) {
-        console.warn("vuforia not available on this platform.");
-        return;
-    }
-    // tell argon to initialize vuforia for our app, using our license information.
-    app.vuforia.init({
-        encryptedLicenseData: "-----BEGIN PGP MESSAGE-----\nVersion: OpenPGP.js v2.3.2\nComment: http://openpgpjs.org\n\n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\nCDjUbY1FxwlVJ4UZ7lz+8jWHO5jYY99adPoATpUaWYxm9oPxz/QR4kvgvLjl\n9Ti8379Y8qihzqsRmf6YLYyggknlt9Uyl2HjA+1zcwbDnb3I6g/XjTFUPy1D\nxZqqSEuCNDLh7m1+GDA3KXQnLIqOdcxOVzyFCDtKI9c6b0D0ezNkxUjgkoIp\nmxSSLDjzmHuPLsQVwqxP4KNU1gT7mXTnhlhsG2Vll/WZD+tuzGK8h9anf6/p\n4pCk61Dhj1hmb9msTaK4FGhmBMtJ6kQ4SzGOfFKG5IElAHidYgd0iz7AqEzX\nGttDkcHGM9iPIYUBY2r/538M/kxeVx5fBiWEkmWz5FMzqPRs3GZWYiAb2tnp\nWSDXW3B1mwznwcCkyUP6OP/c6FFmb6Rag/ZaItVAvVjmA7tXICLJPhYIs9hE\nI6zJSVZ81YtKg9Nb6Rx49qf18pQ1SWZNGrZrWaTJTLu4cu4c5v/czY5kyT0Y\n8RqNUlI5hwWU8G9LpJ5jv8dssrgcweTG/PEbCkzqz0R6W6VgDUyqo6WSGgoS\nB9or791lGcDazNT6CJ4/2Z1wBd4BSHkhSwfcPovGOleZFE24gLiG6puHyVjk\nWEIir2WXzhypwLkG/dn+ZJW1ezOvTb4gVVILHrWhNh8=\n=LoZg\n-----END PGP MESSAGE-----"
-    }).then(function (api) {
-        // the vuforia API is ready, so we can start using it.
-        // tell argon to download a vuforia dataset.  The .xml and .dat file must be together
-        // in the web directory, even though we just provide the .xml file url here 
-        api.objectTracker.createDataSet("../resources/datasets/ArgonTutorial.xml").then(function (dataSet) {
-        //api.objectTracker.createDataSet("https://200.126.23.63:1337/resources/datasets/ArgonTutorial.xml").then(function (dataSet) {
-            // the data set has been succesfully downloaded
-            // tell vuforia to load the dataset.  
-            dataSet.load().then(function () {
-                // when it is loaded, we retrieve a list of trackables defined in the
-                // dataset and set up the content for the target
-                var trackables = dataSet.getTrackables();
-                // tell argon we want to track a specific trackable.  Each trackable
-                // has a Cesium entity associated with it, and is expressed in a 
-                // coordinate frame relative to the camera.  Because they are Cesium
-                // entities, we can ask for their pose in any coordinate frame we know
-                // about.
-                var gvuBrochureEntity = app.context.subscribeToEntityById(trackables["GVUBrochure"].id);
-                // create a THREE object to put on the trackable
-                var gvuBrochureObject = new THREE.Object3D;
-                scene.add(gvuBrochureObject);
-                // the updateEvent is called each time the 3D world should be
-                // rendered, before the renderEvent.  The state of your application
-                // should be updated here.
-                app.context.updateEvent.addEventListener(function () {
-                    // get the pose (in local coordinates) of the gvuBrochure target
-                    var gvuBrochurePose = app.context.getEntityPose(gvuBrochureEntity);
-                    // if the pose is known the target is visible, so set the
-                    // THREE object to the location and orientation
-                    if (gvuBrochurePose.poseStatus & Argon.PoseStatus.KNOWN) {
-                        gvuBrochureObject.position.copy(gvuBrochurePose.position);
-                        gvuBrochureObject.quaternion.copy(gvuBrochurePose.orientation);
-                    }
-                    // when the target is first seen after not being seen, the 
-                    // status is FOUND.  Here, we move the 3D text object from the
-                    // world to the target.
-                    // when the target is first lost after being seen, the status 
-                    // is LOST.  Here, we move the 3D text object back to the world       
-                    if (gvuBrochurePose.poseStatus & Argon.PoseStatus.FOUND) {
-                        gvuBrochureObject.add(argonTextObject);
-                        argonTextObject.position.z = 0;// 0
-                        gvuBrochureObject.add(secondMarker);
-                        secondMarker.position.z = 0;// 0
-                    }
-                    else if (gvuBrochurePose.poseStatus & Argon.PoseStatus.LOST) {
-                        argonTextObject.position.z = -0.50;
-                        userLocation.add(argonTextObject);
-                        argonTextObject.position.z = -0.50;
-                        userLocation.add(secondMarker);
-                    }
-                });
-            })["catch"](function (err) {
-                console.log("could not load dataset: " + err.message);
-            });
-            // activate the dataset.
-            api.objectTracker.activateDataSet(dataSet);
-        });
-        // We can load a second dataset and have both active simultaneously.
-        // Load the Vuforia Stones and Chips targets, and set the MaxSimultaneousImageTargets hint
-        // to 2 so two targets can be tracked simultaneously.
-
-    })["catch"](function (err) {
-        console.log("vuforia failed to initialize: " + err.message);
-    });
-});*/
 
 // Function for updating the lines in every frame
 function updateLines(){
@@ -1573,10 +1356,10 @@ function updateLines(){
         // and use the information in globalConnect.nodeA to find its marker html element
         // Get that element position point and draw a line from there to the mouse position
         // the mouse position is updated every frame with an event listener of mouse move.
-        var element = objects[globalConnect.objectA].nodes[globalConnect.nodeA];
+        /*var element = objects[globalConnect.objectA].nodes[globalConnect.nodeA];
         var rect = element.getBoundingClientRect();
         globalConnect.startPoint[1] = rect.top + rect.height/2;
-        globalConnect.startPoint[0] = rect.left + rect.width/2;
+        globalConnect.startPoint[0] = rect.left + rect.width/2;*/
         
         // When the second marker is clicked, it can go inside
         // Deprecated: Not necessary anymore
@@ -1585,8 +1368,10 @@ function updateLines(){
             rect = element.getBoundingClientRect();
             globalConnect.endPoint[1] = rect.top + rect.height/2;
             globalConnect.endPoint[0] = rect.left + rect.width/2;
+            //
         }*/
-        drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
+        drawLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint,  1,  1);
+        //drawDotLine(globalCanvas.context, globalConnect.startPoint, globalConnect.endPoint, 0, 0);
         // Hide receptor nodes
     }
        
@@ -1594,26 +1379,25 @@ function updateLines(){
     for (var key in objects) {
         var links = objects[key].links;
         for (var keylink in links){
-                var link = links[keylink];
-                // Get nodes from objects object
-                var nodeA = objects[link.objectA].nodes[link.nodeA];
-                var nodeB = objects[link.objectB].nodes[link.nodeB];
-                // Obtain the actual position points of the markers 
-                var connect = getPointsFromNodes(nodeA, nodeB);
-                if (isNaN(link.ballAnimationCount))
-                    link.ballAnimationCount = 0;
-                
-                // Use position obtained for drawing a new line based on markers connected.
-                //drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
-                //drawAnimatedLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
-                if (objects[link.objectB].visible || objects[link.objectB].visible){
-                    drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
-                } else if (!objects[link.objectA].visible && isLineWithinScreen(connect.startPoint, connect.endPoint)){
-                    drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
-                } else if (!objects[link.objectB].visible && isLineWithinScreen(connect.startPoint, connect.endPoint)){
-                    drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
-                } 
-                
+            var link = links[keylink];
+            // Get nodes from objects object
+            var nodeA = objects[link.objectA].nodes[link.nodeA];
+            var nodeB = objects[link.objectB].nodes[link.nodeB];
+            // Obtain the actual position points of the markers 
+            var connect = getPointsFromNodes(nodeA, nodeB);
+            if (isNaN(link.ballAnimationCount))
+                link.ballAnimationCount = 0;
+            
+            // Use position obtained for drawing a new line based on markers connected.
+            //drawDotLine(globalCanvas.context, connect.startPoint, connect.endPoint, 0, 0);
+            //drawAnimatedLine(globalCanvas.context, connect.startPoint, connect.endPoint,  6,  6, link, timeCorrection, 0, 2);
+            if (objects[link.objectA].visible || objects[link.objectB].visible){
+                drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
+            /*} else if (!objects[link.objectA].visible && isLineWithinScreen(connect.startPoint, connect.endPoint)){
+                drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1);
+            } else if (!objects[link.objectB].visible && isLineWithinScreen(connect.startPoint, connect.endPoint)){
+                drawLine(globalCanvas.context, connect.startPoint, connect.endPoint,  1,  1); */ 
+            }       
         }   
     }
 }
